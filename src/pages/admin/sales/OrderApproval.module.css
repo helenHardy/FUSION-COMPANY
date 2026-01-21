@@ -1,0 +1,315 @@
+.container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin: 0 0 0.5rem;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -1px;
+    color: var(--text-main);
+}
+
+.highlight {
+    background: var(--fusion-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.tableCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.tr:hover {
+    background: var(--sidebar-hover);
+}
+
+.td {
+    padding: 1.25rem 1.5rem;
+}
+
+.dateText {
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+.userCell,
+.branchCell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.amount {
+    font-weight: 900;
+    color: var(--primary-light);
+    font-size: 1.1rem;
+}
+
+.pvBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 900;
+    font-size: 0.85rem;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.viewBtn,
+.approveBtn {
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viewBtn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.approveBtn:hover {
+    background: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
+/* Modal Styling */
+.detailContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--input-bg);
+    padding: 1.5rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.detailUserCard {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    background: var(--fusion-gradient);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.detailUserName {
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--text-main);
+}
+
+.detailUserId {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.detailGiftBalance {
+    font-size: 0.75rem;
+    color: #10b981;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.detailAmountCard {
+    text-align: right;
+}
+
+.detailTotal {
+    font-size: 1.8rem;
+    font-weight: 950;
+    color: var(--primary-color);
+    font-family: 'Outfit', sans-serif;
+}
+
+.detailPV {
+    font-size: 0.9rem;
+    color: #10b981;
+    font-weight: 800;
+}
+
+.sectionTitle {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.itemsList {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.detailItem {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detailItem:last-child {
+    border-bottom: none;
+}
+
+.itemImg {
+    width: 44px;
+    height: 44px;
+    background: var(--input-bg);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.itemImg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.itemInfo {
+    flex: 1;
+}
+
+.itemName {
+    font-weight: 800;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.giftBadge {
+    background: #10b981;
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 5px;
+}
+
+.itemMeta {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.itemTotal {
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+.modalActions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.rejectBtn,
+.approveFullBtn {
+    flex: 1;
+    height: 60px;
+    border-radius: 16px;
+    font-weight: 900;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.rejectBtn {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: #f87171;
+}
+
+.rejectBtn:hover {
+    background: #f87171;
+    color: white;
+}
+
+.approveFullBtn {
+    background: var(--fusion-gradient);
+    border: none;
+    color: white;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
+
+.approveFullBtn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
+}

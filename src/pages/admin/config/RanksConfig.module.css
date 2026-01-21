@@ -1,0 +1,320 @@
+.container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin: 0 0 0.5rem;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -1px;
+    color: var(--text-main);
+}
+
+.highlight {
+    background: var(--fusion-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.addButton {
+    height: 52px;
+    padding: 0 2rem;
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Table Card */
+.tableCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.tr:hover {
+    background: var(--sidebar-hover);
+}
+
+.td {
+    padding: 1.25rem 1.5rem;
+}
+
+.orderBadge {
+    font-weight: 900;
+    color: var(--primary-light);
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+}
+
+.rankCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rankIcon {
+    background: rgba(245, 158, 11, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.rankName {
+    font-weight: 800;
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.reqText {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+}
+
+.reqValue {
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.pvgValue {
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+}
+
+.structureBadge {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.levelBadge {
+    display: inline-flex;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.levelActive {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.levelInactive {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.editBtn {
+    height: 38px;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.deleteBtn {
+    background: none;
+    border: none;
+    color: #f87171;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.6;
+}
+
+.deleteBtn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Modal Styling */
+.formGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.section {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.5rem;
+}
+
+.sectionTitle {
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inputGroup {
+    margin-bottom: 1rem;
+}
+
+.inputGroup:last-child {
+    margin-bottom: 0;
+}
+
+.label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+}
+
+.twoCol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.royaltyGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.royaltyItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--input-bg);
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.lvlLabel {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+}
+
+.lvlInput {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    height: auto !important;
+    font-weight: 900;
+    color: var(--text-main);
+    width: 40px;
+    text-align: right;
+}
+
+.structureHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.addReqBtn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.structureRow {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr auto;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.modalActions {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.saveButton {
+    flex: 2;
+    height: 56px;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.cancelButton {
+    flex: 1;
+}
+
+@media (max-width: 640px) {
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .formGrid,
+    .twoCol {
+        grid-template-columns: 1fr;
+    }
+
+    .structureRow {
+        grid-template-columns: 1fr 1fr auto;
+    }
+}

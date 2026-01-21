@@ -1,0 +1,362 @@
+.container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    margin-bottom: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 2rem;
+}
+
+.title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin: 0 0 0.5rem;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -1px;
+    color: var(--text-main);
+}
+
+.highlight {
+    background: var(--fusion-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    background: var(--input-bg);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.tab {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.tabActive {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--text-main);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.badge {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    border: 2px solid var(--bg-color);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Filter Bar */
+.filterSection {
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.searchWrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.searchInput {
+    padding-left: 44px !important;
+}
+
+/* Table Area */
+.tableCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.tr:hover {
+    background: var(--sidebar-hover);
+}
+
+.td {
+    padding: 1.25rem 1.5rem;
+}
+
+.userName {
+    font-weight: 800;
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.amountText {
+    font-weight: 900;
+    color: var(--text-main);
+    font-size: 1.1rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.methodBadge {
+    display: inline-flex;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.actionGroup {
+    display: flex;
+    gap: 12px;
+}
+
+.approveBtn,
+.rejectBtn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.approveBtn {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.approveBtn:hover {
+    background: #10b981;
+    color: white;
+    transform: scale(1.1);
+}
+
+.rejectBtn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.rejectBtn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.rankBadge {
+    display: inline-flex;
+    padding: 4px 10px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-light);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.earningsText {
+    font-weight: 800;
+    color: #10b981;
+    font-family: 'Outfit', sans-serif;
+}
+
+.balanceText {
+    font-size: 1.15rem;
+    font-weight: 950;
+    font-family: 'Outfit', sans-serif;
+}
+
+.balanceActive {
+    color: var(--text-main);
+    text-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+}
+
+.balanceZero {
+    color: var(--text-dim);
+}
+
+.payoutBtn {
+    height: 38px;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Modal Content */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.amountHighlight {
+    text-align: center;
+    padding: 2.5rem;
+    background: var(--input-bg);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.amountLabel {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.amountInput {
+    background: transparent !important;
+    border: none !important;
+    font-size: 3rem !important;
+    font-weight: 950 !important;
+    color: var(--text-main) !important;
+    text-align: center !important;
+    height: auto !important;
+    padding: 0 !important;
+    font-family: 'Outfit', sans-serif !important;
+}
+
+.maxBalance {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 10px;
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldLabel {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.actions {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.confirmBtn {
+    flex: 2;
+    height: 56px;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.cancelBtn {
+    flex: 1;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 5rem 2rem;
+}
+
+.emptyIcon {
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+    opacity: 0.3;
+}
+
+@media (max-width: 1024px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .tabs {
+        width: 100%;
+    }
+
+    .tab {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .filterSection {
+        padding: 1rem;
+    }
+
+    .amountInput {
+        font-size: 2rem !important;
+    }
+}

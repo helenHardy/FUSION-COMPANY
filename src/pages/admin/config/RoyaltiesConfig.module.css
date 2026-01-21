@@ -1,0 +1,262 @@
+.container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.iconWrapper {
+    background: var(--fusion-gradient);
+    color: white;
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.title {
+    font-size: 2.22rem;
+    font-weight: 900;
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -1px;
+    color: var(--text-main);
+}
+
+.subtitle {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.topGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0 0 1.5rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Settings Form */
+.settingsControl {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.inputGroup {
+    flex: 1;
+}
+
+.label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.relative {
+    position: relative;
+}
+
+.percentIcon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-weight: 800;
+}
+
+/* Danger Zone */
+.dangerCard {
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(2, 6, 23, 0.1) 100%) !important;
+}
+
+.dangerTitle {
+    color: #f87171 !important;
+}
+
+.dangerText {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+}
+
+.closingBtn {
+    width: 100%;
+    height: 48px;
+    background: #ef4444 !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+}
+
+.closingBtn:hover {
+    background: #dc2626 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+}
+
+.closingBtn:disabled {
+    opacity: 0.5;
+    transform: none;
+}
+
+.closingLog {
+    margin-top: 1rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #10b981;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Milestone Form */
+.form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.submitBtn {
+    height: 48px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.cancelBtn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-dim);
+    padding: 0 12px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Table Area */
+.tableContainer {
+    margin-top: 2rem;
+    padding: 0;
+    overflow: hidden;
+}
+
+.levelText {
+    font-weight: 900;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+}
+
+.milestoneValue {
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.highlightValue {
+    color: var(--primary-light);
+    font-weight: 800;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.iconBtn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editBtn {
+    color: var(--primary-light);
+}
+
+.editBtn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.deleteBtn {
+    color: #f87171;
+}
+
+.deleteBtn:hover {
+    background: #ef4444;
+    color: white;
+}
+
+@media (max-width: 1024px) {
+    .form {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .topGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form {
+        grid-template-columns: 1fr;
+    }
+}

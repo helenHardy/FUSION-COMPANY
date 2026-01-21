@@ -1,0 +1,364 @@
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    margin-bottom: 2.5rem;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin: 0 0 0.5rem;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -1px;
+}
+
+.highlight {
+    background: var(--fusion-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+}
+
+/* Balance Hero Card */
+.balanceHero {
+    padding: 3rem;
+    background: var(--fusion-gradient);
+    border-radius: var(--radius-lg);
+    color: white;
+    margin-bottom: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.balanceHero::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.balanceInfo {
+    position: relative;
+    z-index: 2;
+}
+
+.balanceLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0.9;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+}
+
+.balanceAmount {
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    font-family: 'Outfit', sans-serif;
+}
+
+.balanceStats {
+    display: flex;
+    gap: 2.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    padding: 1.5rem 2.5rem;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 2;
+}
+
+.statItem {
+    text-align: center;
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    font-weight: 800;
+    opacity: 0.8;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.statDivider {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Category Grid */
+.categoryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.categoryCard {
+    padding: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.categoryCard:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-light);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.iconBox {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+.catInfo {
+    flex: 1;
+}
+
+.catLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.catAmount {
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+}
+
+.catDesc {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+
+/* History Section */
+.historyCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.historyHeader {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.historyTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.tableWrapper {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.th {
+    padding: 1.25rem 2rem;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.td {
+    padding: 1.5rem 2rem;
+    font-size: 0.95rem;
+}
+
+.date {
+    color: var(--text-muted);
+}
+
+.sourceCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sourceIcon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+}
+
+.sourceName {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.badgeFastStart {
+    background: rgba(14, 165, 233, 0.1);
+    color: #0ea5e9;
+}
+
+.badgeMonthly {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.badgeResidual {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.levelBadge {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.amountCell {
+    text-align: right;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #10b981;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 6rem 1rem;
+    color: var(--text-dim);
+}
+
+.emptyIcon {
+    opacity: 0.1;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .balanceHero {
+        padding: 2rem;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .balanceAmount {
+        font-size: 3rem;
+    }
+
+    .balanceStats {
+        width: 100%;
+        justify-content: center;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .title {
+        font-size: 2rem;
+    }
+
+    .balanceAmount {
+        font-size: 2.5rem;
+    }
+
+    .balanceStats {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+
+    .statDivider {
+        height: 1px;
+        width: 100%;
+    }
+
+    .td,
+    .th {
+        padding: 1rem;
+    }
+}
