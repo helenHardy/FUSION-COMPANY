@@ -78,6 +78,7 @@ export const AuthProvider = ({ children }) => {
         user,
         profile,
         signOut: () => supabase.auth.signOut(),
+        refreshProfile: () => fetchProfile(user.id),
         loading
     }
 

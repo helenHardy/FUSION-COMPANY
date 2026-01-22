@@ -18,6 +18,8 @@ import Earnings from './pages/dashboard/Earnings'
 import AdminSales from './pages/admin/reports/GlobalSales' // Renamed from GlobalSales
 import LiquidationManager from './pages/admin/finances/LiquidationManager'
 import UserList from './pages/admin/users/UserList'
+import PendingActivations from './pages/admin/users/PendingActivations'
+import AdminNetworkTree from './pages/admin/users/AdminNetworkTree'
 import Withdrawals from './pages/dashboard/Withdrawals'
 import PayoutManager from './pages/admin/finances/PayoutManager'
 import CareerPath from './pages/dashboard/CareerPath'
@@ -56,6 +58,8 @@ function App() {
             <Route path="shop" element={<POS />} />
             <Route path="register-affiliate" element={<Register />} />
             <Route path="admin/users" element={<UserList />} />
+            <Route path="admin/network/:userId" element={<AdminNetworkTree />} />
+            <Route path="admin/pending-activations" element={<PendingActivations />} />
             <Route path="admin/branches" element={<BranchList />} />
             <Route path="admin/products" element={<ProductList />} />
             <Route path="admin/inventory" element={<InventoryList />} />

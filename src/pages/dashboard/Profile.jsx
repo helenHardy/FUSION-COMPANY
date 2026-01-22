@@ -1,11 +1,68 @@
-
+import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 import { formatDate } from '../../lib/utils'
 import { User, Shield, CreditCard, Calendar, Award, Package, Sparkles, CheckCircle, XCircle } from 'lucide-react'
 import styles from './Profile.module.css'
 
 export default function Profile() {
-    const { profile } = useAuth()
+    const { profile, user, refreshProfile } = useAuth()
+    const [editing, setEditing] = useState(false)
+    const [newName, setNewName] = useState(profile?.full_name || '')
+    const [saving, setSaving] = useState(false)
+
+    // Password change state
+    const [changingPassword, setChangingPassword] = useState(false)
+    const [passwords, setPasswords] = useState({ new: '', confirm: '' })
+    const [passLoading, setPassLoading] = useState(false)
+
+    const handleUpdateName = async () => {
+        if (!newName.trim()) return
+        setSaving(true)
+        try {
+            const { error } = await supabase.rpc('update_profile_data', {
+                p_user_id: profile.id,
+                p_full_name: newName
+            })
+            if (error) throw error
+            await refreshProfile()
+            setEditing(false)
+            alert('Perfil actualizado correctamente')
+        } catch (err) {
+            console.error("Error al actualizar perfil:", err)
+            alert("Error: " + err.message)
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault()
+        if (passwords.new !== passwords.confirm) {
+            alert("Las contraseñas no coinciden")
+            return
+        }
+        if (passwords.new.length < 6) {
+            alert("La contraseña debe tener al menos 6 caracteres")
+            return
+        }
+
+        setPassLoading(true)
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: passwords.new
+            })
+            if (error) throw error
+            alert('Contraseña actualizada correctamente')
+            setChangingPassword(false)
+            setPasswords({ new: '', confirm: '' })
+        } catch (err) {
+            console.error("Error al cambiar contraseña:", err)
+            alert("Error: " + err.message)
+        } finally {
+            setPassLoading(false)
+        }
+    }
 
     if (!profile) return (
         <div className={styles.container} style={{ textAlign: 'center', padding: '5rem' }}>
@@ -23,7 +80,32 @@ export default function Profile() {
                 <div className={styles.avatarBox}>
                     <User size={48} />
                 </div>
-                <h1 className={styles.userName}>{profile.full_name}</h1>
+                {editing ? (
+                    <div className={styles.editNameBox}>
+                        <input
+                            type="text"
+                            className={styles.editInput}
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            placeholder="Nombre completo"
+                        />
+                        <div className={styles.editActions}>
+                            <button className={styles.saveBtn} onClick={handleUpdateName} disabled={saving}>
+                                {saving ? 'Guardando...' : 'Guardar'}
+                            </button>
+                            <button className={styles.cancelBtn} onClick={() => { setEditing(false); setNewName(profile.full_name); }}>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <h1 className={styles.userName}>{profile.full_name}</h1>
+                        <button className={styles.miniEditBtn} onClick={() => setEditing(true)}>
+                            Editar Nombre
+                        </button>
+                    </>
+                )}
                 <div className={styles.userRole}>{profile.role}</div>
 
                 <div className={`${styles.statusBadge} ${isActive ? styles.statusActive : styles.statusInactive}`}>
@@ -83,25 +165,54 @@ export default function Profile() {
                     </div>
                 </div>
 
-                {/* Benefit Card */}
+                {/* Security Section */}
                 <div className={styles.benefitSection}>
-                    <div className={`${styles.benefitCard} glass`}>
+                    <div className={`${styles.benefitCard} glass`} style={{ borderLeftColor: '#f87171' }}>
                         <div className={styles.benefitContent}>
                             <div className={styles.benefitHeader}>
-                                <div style={{ color: '#fbbf24' }}>
-                                    <Sparkles size={24} />
+                                <div style={{ color: '#f87171' }}>
+                                    <Shield size={24} />
                                 </div>
-                                <h3 className={styles.benefitTitle}>Beneficio de Combo</h3>
+                                <h3 className={styles.benefitTitle}>Seguridad de la Cuenta</h3>
                             </div>
-                            <p className={styles.benefitDescription}>
-                                Como recompensa a tu lealtad, tienes productos de regalo esperándote en tu próxima visita a sucursal.
-                            </p>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                            <div className={styles.countBadge}>{profile.free_products_count || 0}</div>
-                            <div style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-dim)', textTransform: 'uppercase' }}>
-                                Productos Disponibles
-                            </div>
+
+                            {changingPassword ? (
+                                <form onSubmit={handleChangePassword} className={styles.passForm}>
+                                    <input
+                                        type="password"
+                                        placeholder="Nueva contraseña"
+                                        className={styles.passInput}
+                                        value={passwords.new}
+                                        onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                                        required
+                                    />
+                                    <input
+                                        type="password"
+                                        placeholder="Confirmar contraseña"
+                                        className={styles.passInput}
+                                        value={passwords.confirm}
+                                        onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                                        required
+                                    />
+                                    <div className={styles.passActions}>
+                                        <button type="submit" className={styles.saveBtn} disabled={passLoading}>
+                                            {passLoading ? 'Cambiando...' : 'Confirmar Cambio'}
+                                        </button>
+                                        <button type="button" className={styles.cancelBtn} onClick={() => setChangingPassword(false)}>
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <>
+                                    <p className={styles.benefitDescription}>
+                                        Mantén tu cuenta protegida. Te recomendamos cambiar tu contraseña periódicamente.
+                                    </p>
+                                    <button className={styles.passBtn} onClick={() => setChangingPassword(true)}>
+                                        Cambiar mi Contraseña
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -140,33 +140,19 @@
 }
 
 .logoContainer {
-    width: 68px;
-    height: 68px;
-    background: linear-gradient(135deg, #6366f1 0%, #22d3ee 100%);
-    border-radius: 20px;
+    width: 120px;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
-    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
+    margin: 0 auto 2rem;
     position: relative;
 }
 
-.logoContainer::before {
-    content: '';
-    position: absolute;
-    inset: -5px;
-    background: inherit;
-    filter: blur(10px);
-    opacity: 0.3;
-    z-index: -1;
-}
-
 .logoImage {
-    width: 90%;
-    height: 90%;
+    width: 100%;
+    height: auto;
     object-fit: contain;
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
 }
 
 .title {

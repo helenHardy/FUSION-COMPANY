@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
@@ -20,7 +19,7 @@ export default function POS() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(null)
     const [lastSale, setLastSale] = useState(null)
-    const [showCart, setShowCart] = useState(false) // For mobile cart view
+    const [showCart, setShowCart] = useState(false)
 
     useEffect(() => {
         fetchBranches()
@@ -71,115 +70,53 @@ export default function POS() {
     }
 
     const addToCart = (product) => {
-        console.log("Adding to cart:", product.name)
-        if (!product?.id) {
-            console.error("Product has no ID", product)
-            return
-        }
-
-        // Calcular cuántos regalos ya hay en el carrito
+        if (!product?.id) return
         const currentGifts = cart.filter(item => item.isGift).reduce((sum, item) => sum + item.quantity, 0)
         const availableGifts = (selectedCustomer?.free_products_count || 0) - currentGifts
-
-        // Si hay balance disponible, se añade como regalo
         const shouldBeGift = availableGifts > 0
 
         const existing = cart.find(item => item.id === product.id && item.isGift === shouldBeGift)
 
         if (existing) {
-            // Verificar stock total (gift + normal)
-            const totalQty = cart
-                .filter(item => item.id === product.id)
-                .reduce((sum, item) => sum + item.quantity, 0)
-
+            const totalQty = cart.filter(item => item.id === product.id).reduce((sum, item) => sum + item.quantity, 0)
             if (totalQty >= product.stock) return
-
-            setCart(cart.map(item =>
-                (item.id === product.id && item.isGift === shouldBeGift)
-                    ? { ...item, quantity: item.quantity + 1 }
-                    : item
-            ))
+            setCart(cart.map(item => (item.id === product.id && item.isGift === shouldBeGift) ? { ...item, quantity: item.quantity + 1 } : item))
         } else {
             setCart([...cart, { ...product, quantity: 1, isGift: shouldBeGift }])
         }
     }
 
-    // Sincronizar regalos automáticamente cuando cambia el cliente
     useEffect(() => {
         if (!selectedCustomer) {
-            // Si se quita el cliente, todos los productos pasan a ser normales
-            if (cart.some(i => i.isGift)) {
-                setCart(cart.map(i => ({ ...i, isGift: false })))
-            }
+            if (cart.some(i => i.isGift)) setCart(cart.map(i => ({ ...i, isGift: false })))
             return
         }
-
         const balance = selectedCustomer.free_products_count || 0
-        if (balance >= 0) {
-            const newCart = []
-            let remainingGifts = balance
-
-            // Aplanar el carrito para redistribuir regalos (unidades individuales)
-            const units = []
-            cart.forEach(item => {
-                for (let k = 0; k < item.quantity; k++) {
-                    units.push({ ...item, quantity: 1 })
-                }
-            })
-
-            // Marcar unidades como regalo hasta agotar el balance
-            units.forEach(u => {
-                if (remainingGifts > 0) {
-                    u.isGift = true
-                    remainingGifts--
-                } else {
-                    u.isGift = false
-                }
-            })
-
-            // Re-consolidar el carrito por ID e isGift
-            units.forEach(u => {
-                const existing = newCart.find(i => i.id === u.id && i.isGift === u.isGift)
-                if (existing) {
-                    existing.quantity += 1
-                } else {
-                    newCart.push(u)
-                }
-            })
-
-            // Actualizar si hay cambios
-            if (JSON.stringify(newCart) !== JSON.stringify(cart)) {
-                setCart(newCart)
-            }
-        }
-    }, [selectedCustomer, selectedCustomer?.free_products_count])
+        const newCart = []
+        let remainingGifts = balance
+        const units = []
+        cart.forEach(item => { for (let k = 0; k < item.quantity; k++) units.push({ ...item, quantity: 1 }) })
+        units.forEach(u => { if (remainingGifts > 0) { u.isGift = true; remainingGifts-- } else { u.isGift = false } })
+        units.forEach(u => {
+            const existing = newCart.find(i => i.id === u.id && i.isGift === u.isGift)
+            if (existing) existing.quantity += 1; else newCart.push(u)
+        })
+        if (JSON.stringify(newCart) !== JSON.stringify(cart)) setCart(newCart)
+    }, [selectedCustomer, cart])
 
     const toggleGift = (id, isGift) => {
         if (!selectedCustomer) return
-
         const giftCount = cart.filter(item => item.isGift).reduce((sum, i) => sum + i.quantity, 0)
-
         if (!isGift && giftCount >= (selectedCustomer.free_products_count || 0)) {
             alert("El cliente no tiene suficiente balance de regalos.")
             return
         }
-
-        // Simplemente invertimos el flag del item específico
-        const updated = cart.map(item =>
-            (item.id === id && item.isGift === isGift) ? { ...item, isGift: !isGift } : item
-        )
-
-        // Consolidar por si ahora hay dos líneas iguales
+        const updated = cart.map(item => (item.id === id && item.isGift === isGift) ? { ...item, isGift: !isGift } : item)
         const consolidated = []
         updated.forEach(u => {
             const existing = consolidated.find(i => i.id === u.id && i.isGift === u.isGift)
-            if (existing) {
-                existing.quantity += u.quantity
-            } else {
-                consolidated.push(u)
-            }
+            if (existing) existing.quantity += u.quantity; else consolidated.push(u)
         })
-
         setCart(consolidated)
     }
 
@@ -187,8 +124,7 @@ export default function POS() {
         setCart(cart.map(item => {
             if (item.id === id && item.isGift === isGift) {
                 const newQty = item.quantity + delta
-                if (newQty < 1) return item
-                if (newQty > item.stock) return item
+                if (newQty < 1 || newQty > item.stock) return item
                 return { ...item, quantity: newQty }
             }
             return item
@@ -203,344 +139,179 @@ export default function POS() {
     const totalPV = cart.reduce((sum, item) => sum + (item.isGift ? 0 : item.pv_points * item.quantity), 0)
 
     const handleCheckout = async () => {
-        if (!selectedCustomer) {
-            alert("Por favor seleccione un cliente")
-            return
-        }
+        if (!selectedCustomer) { alert("Por favor seleccione un cliente"); return }
         if (cart.length === 0) return
-
         setLoading(true)
         try {
-            const items = cart.map(item => ({
-                product_id: item.id,
-                quantity: item.quantity,
-                price: item.price,         // For process_sale compatibility
-                pv: item.pv_points,        // For process_sale compatibility
-                price_at_sale: item.price, // For create_pending_order
-                pv_at_sale: item.pv_points, // For create_pending_order
-                is_gift: item.isGift
-            }))
-
+            const items = cart.map(item => ({ product_id: item.id, quantity: item.quantity, price: item.price, pv: item.pv_points, price_at_sale: item.price, pv_at_sale: item.pv_points, is_gift: item.isGift }))
             const isManager = ['admin', 'sucursal', 'cajero'].includes(profile.role)
-
             let rpcName = isManager ? 'process_sale' : 'create_pending_order'
-            let params = isManager ? {
-                p_user_id: selectedCustomer.id,
-                p_branch_id: selectedBranch,
-                p_seller_id: profile.id,
-                p_items: items
-            } : {
-                p_user_id: selectedCustomer.id,
-                p_branch_id: selectedBranch,
-                p_seller_id: profile.id,
-                p_items: items,
-                p_total_amount: totalAmount,
-                p_total_pv: totalPV
-            }
+            let params = { p_user_id: selectedCustomer.id, p_branch_id: selectedBranch, p_seller_id: profile.id, p_items: items }
+            if (!isManager) { params.p_total_amount = totalAmount; params.p_total_pv = totalPV }
 
             const { error } = await supabase.rpc(rpcName, params)
-
             if (error) throw error
 
-            setSuccess(isManager ? "¡Venta realizada con éxito!" : "¡Pedido solicitado con éxito! Espera aprobación.")
-
-            // Set last sale data for Ticket Modal
+            setSuccess(isManager ? "¡Venta realizada con éxito!" : "¡Pedido solicitado con éxito!")
             if (isManager) {
-                const branchName = branches.find(b => b.id === selectedBranch)?.name || 'Central'
-                setLastSale({
-                    items: [...cart],
-                    customer: selectedCustomer,
-                    total: totalAmount,
-                    totalPV: totalPV,
-                    date: new Date().toISOString(),
-                    branchName,
-                    sellerName: profile.full_name || profile.email
-                })
+                setLastSale({ items: [...cart], customer: selectedCustomer, total: totalAmount, totalPV: totalPV, date: new Date().toISOString(), branchName: branches.find(b => b.id === selectedBranch)?.name || 'Central', sellerName: profile.full_name || profile.email })
             }
-
-            setCart([])
-            setSelectedCustomer(null)
-            setCustomerSearch('')
-            setShowCart(false)
-            fetchInventory()
-
-            // Only auto-hide success toast if we are NOT showing the modal (i.e. pending orders)
-            if (!isManager) {
-                setTimeout(() => setSuccess(null), 3000)
-            } else {
-                // For managers, we show modal, so maybe clear toast immediately or keep it?
-                // Let's clear toast to avoid clutter since modal is clear enough
-                setTimeout(() => setSuccess(null), 1000)
-            }
-        } catch (err) {
-            alert("Error al procesar: " + err.message)
-        } finally {
-            setLoading(false)
-        }
+            setCart([]); setSelectedCustomer(null); setCustomerSearch(''); setShowCart(false); fetchInventory()
+            setTimeout(() => setSuccess(null), 3000)
+        } catch (err) { alert("Error: " + err.message) } finally { setLoading(false) }
     }
 
+    const handlePrint = () => {
+        const ticketContent = document.getElementById('printable-ticket');
+        if (!ticketContent) return;
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentWindow.document;
+        const css = `
+            @page { size: 58mm auto; margin: 0; }
+            body { margin: 0; padding: 0; width: 58mm; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 8.5pt; line-height: 1.2; }
+            #printable-ticket { width: 58mm; padding: 5mm 2mm; box-sizing: border-box; }
+            .ticketHeader { text-align: center; margin-bottom: 3mm; border-bottom: 0.5pt dashed black; padding-bottom: 2mm; }
+            .ticketTitle { font-size: 11pt; font-weight: 950; line-height: 1.1; margin: 0; }
+            .ticketSubtitle { font-size: 8.5pt; font-weight: 700; margin-top: 1mm; }
+            .divider { text-align: center; margin: 2mm 0; font-weight: 900; }
+            .ticketMeta { font-size: 8.5pt; margin-bottom: 2mm; }
+            .metaRow { display: flex; justify-content: space-between; margin-bottom: 0.8mm; line-height: 1; }
+            .ticketItems { width: 100%; margin: 3mm 0; }
+            .itemsHeader { display: flex; justify-content: space-between; font-weight: 900; border-bottom: 0.5pt solid black; padding-bottom: 0.5mm; margin-bottom: 1mm; }
+            .itemRowWrapper { margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 0.1pt solid #eee; }
+            .itemMainLine { display: flex; justify-content: space-between; }
+            .itemDetailLine { display: flex; gap: 3mm; font-size: 7.5pt; font-style: italic; }
+            .giftLabel { font-weight: 900; border: 0.5pt solid black; padding: 0 1mm; }
+            .totalsBox { border-top: 0.5pt solid black; padding-top: 1.5mm; margin-top: 1.5mm; }
+            .totalLine { display: flex; justify-content: space-between; margin-bottom: 0.8mm; }
+            .totalLineLarge { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 11pt; font-weight: 950; border-top: 1.5pt solid black; padding-top: 1.5mm; }
+            .fidelityBox { text-align: center; margin: 4mm 0; border: 0.5pt solid black; padding: 1.5mm; font-weight: 800; }
+            .ticketFooter { text-align: center; margin-top: 5mm; font-size: 8pt; line-height: 1.3; }
+            .thankYou { font-weight: 900; font-size: 9pt; margin-bottom: 1.5mm; }
+        `;
+        doc.open(); doc.write('<html><head><style>' + css + '</style></head><body>'); doc.write(ticketContent.innerHTML); doc.write('</body></html>'); doc.close();
+        iframe.contentWindow.focus();
+        setTimeout(() => { iframe.contentWindow.print(); setTimeout(() => document.body.removeChild(iframe), 1000) }, 500);
+    };
+
     return (
-        <>
-            <div className={styles.container}>
-                {/* Products Section */}
-                <div className={styles.productsSection}>
-                    <header className={styles.header}>
-                        <div>
-                            <h2 className={styles.title}>Tienda <span className={styles.highlight}>Fusion</span></h2>
-                            <p className={styles.subtitle}>Suministros corporativos y productos exclusivos.</p>
-                        </div>
-                    </header>
+        <div className={styles.container}>
+            <div className={styles.productsSection}>
+                <header className={styles.header}>
+                    <h2 className={styles.title}>Tienda <span className={styles.highlight}>Fusion</span></h2>
+                    <p className={styles.subtitle}>Suministros corporativos y productos exclusivos.</p>
+                </header>
 
-                    <div className={`${styles.filterBar} glass`}>
-                        <div className={styles.branchBox}>
-                            <label className={styles.inputLabel}>Punto de Venta</label>
-                            <select
-                                value={selectedBranch}
-                                onChange={e => setSelectedBranch(e.target.value)}
-                                className="input"
-                                style={{ fontWeight: '700' }}
-                            >
-                                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                            </select>
-                        </div>
-                        <div className={styles.searchBox}>
-                            <label className={styles.inputLabel}>Buscar Productos</label>
-                            <div className={styles.searchInputWrapper}>
-                                <Search className={styles.searchIcon} size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Nombre o categoría..."
-                                    className={`input ${styles.searchInput}`}
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                        </div>
+                <div className={`${styles.filterBar} glass`}>
+                    <div className={styles.branchBox}>
+                        <label className={styles.inputLabel}>Punto de Venta</label>
+                        <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)} className="input">
+                            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
                     </div>
-
-                    <div className={styles.productGrid}>
-                        {products
-                            .filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                            .map(product => (
-                                <div key={product.id} className={styles.productCard}>
-                                    <div className={styles.imageContainer}>
-                                        {product.image_url ? (
-                                            <img src={product.image_url} alt={product.name} className={styles.image} />
-                                        ) : (
-                                            <Package className={styles.placeholderIcon} size={64} />
-                                        )}
-                                    </div>
-                                    <div className={styles.infoBox}>
-                                        <h4 className={styles.productName}>{product.name}</h4>
-                                        <div className={styles.priceRow}>
-                                            <div className={styles.price}>{formatCurrency(product.price)}</div>
-                                            <div className={styles.pvBadge}>{product.pv_points} PV</div>
-                                        </div>
-                                        <div className={`${styles.stock} ${product.stock < 10 ? styles.stockLow : styles.stockNormal}`}>
-                                            {product.stock} unidades
-                                        </div>
-                                        <button
-                                            className={styles.addButton}
-                                            onClick={() => addToCart(product)}
-                                        >
-                                            <Plus size={18} /> Añadir
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                    </div>
-                </div>
-
-                {/* Cart Section */}
-                <div className={`${styles.cartContainer} ${showCart ? styles.cartContainerOpen : ''}`}>
-                    <div className={styles.cartCard}>
-                        <div className={styles.cartHeader}>
-                            <div className={styles.cartTitleBox}>
-                                <div className={styles.cartHeaderIcon}>
-                                    <ShoppingCart size={24} />
-                                </div>
-                                <h3 className={styles.cartTitle}>Venta Actual</h3>
-                            </div>
-                            <button className={styles.closeCart} onClick={() => setShowCart(false)}>
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        {/* Customer Selection */}
-                        <div className={styles.customerSection}>
-                            <label className={styles.inputLabel}>Asignar a Cliente</label>
-                            {!selectedCustomer ? (
-                                <div style={{ position: 'relative', marginTop: '8px' }}>
-                                    <input
-                                        type="text"
-                                        className="input"
-                                        placeholder="Nombre o ID de Carnet..."
-                                        value={customerSearch}
-                                        onChange={e => searchCustomers(e.target.value)}
-                                    />
-                                    {customers.length > 0 && (
-                                        <div className={styles.searchResults}>
-                                            {customers.map(c => (
-                                                <div key={c.id} onClick={() => setSelectedCustomer(c)} className={styles.searchItem}>
-                                                    <div className={styles.customerName}>{c.full_name}</div>
-                                                    <div className={styles.customerId}>ID: {c.document_id}</div>
-                                                    {c.free_products_count > 0 && (
-                                                        <div className={styles.giftBalance} style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                                                            <Sparkles size={12} />
-                                                            <span>Tiene {c.free_products_count} regalos</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className={styles.selectedCustomer}>
-                                    <div className={styles.customerAvatar}>
-                                        <User size={22} />
-                                    </div>
-                                    <div className={styles.customerInfo}>
-                                        <div className={styles.customerName}>{selectedCustomer.full_name}</div>
-                                        <div className={styles.customerId}>#{selectedCustomer.document_id}</div>
-                                        {(selectedCustomer.free_products_count || 0) > 0 ? (
-                                            <div className={styles.giftBalance}>
-                                                <Sparkles size={12} />
-                                                <span>Regalos: {selectedCustomer.free_products_count} disponibles</span>
-                                            </div>
-                                        ) : (
-                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '4px' }}>
-                                                Sin regalos disponibles
-                                            </div>
-                                        )}
-                                    </div>
-                                    <button onClick={() => setSelectedCustomer(null)} className={styles.removeCustomer}>
-                                        <X size={16} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Cart Items */}
-                        <div className={styles.cartItems}>
-                            {cart.length === 0 ? (
-                                <div className={styles.emptyCart}>
-                                    <ShoppingCart size={64} className={styles.emptyIcon} />
-                                    <p style={{ fontWeight: '700' }}>El carrito está vacío</p>
-                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>Selecciona productos para comenzar la venta.</p>
-                                </div>
-                            ) : (
-                                cart.map(item => (
-                                    <div key={`${item.id}-${item.isGift}`} className={styles.cartItem}>
-                                        <div className={styles.itemMain}>
-                                            <div className={styles.itemName}>
-                                                {item.name}
-                                                {item.isGift && <span className={styles.giftLabel}>REGALO</span>}
-                                            </div>
-                                            <div className={styles.itemMeta}>
-                                                {item.isGift ? 'Costo: 0 Bs' : formatCurrency(item.price)} <span style={{ opacity: 0.3 }}>•</span> {item.isGift ? '0 PV' : `${item.pv_points} PV`}
-                                            </div>
-                                        </div>
-                                        <div className={styles.qtyControls}>
-                                            {(selectedCustomer?.free_products_count || 0) > 0 && (
-                                                <button
-                                                    className={`${styles.giftToggle} ${item.isGift ? styles.giftActive : ''}`}
-                                                    onClick={() => toggleGift(item.id, item.isGift)}
-                                                    title="Marcar como regalo"
-                                                >
-                                                    <Sparkles size={14} />
-                                                </button>
-                                            )}
-                                            <button className={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.isGift, -1)}>
-                                                <Minus size={14} />
-                                            </button>
-                                            <span className={styles.qtyValue}>{item.quantity}</span>
-                                            <button className={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.isGift, 1)}>
-                                                <Plus size={14} />
-                                            </button>
-                                            <button onClick={() => removeFromCart(item.id, item.isGift)} className={styles.deleteBtn}>
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-
-                        {/* Checkout Summary */}
-                        <div className={styles.cartFooter}>
-                            <div className={styles.summaryRow}>
-                                <span className={styles.summaryLabel}>Puntos acumulados</span>
-                                <span className={styles.totalPV}>{totalPV.toFixed(2)} PV</span>
-                            </div>
-                            <div className={styles.totalRow}>
-                                <span className={styles.totalLabel}>Total</span>
-                                <span className={styles.totalValue}>{formatCurrency(totalAmount)}</span>
-                            </div>
-                            <button
-                                className={styles.checkoutBtn}
-                                disabled={loading || cart.length === 0 || !selectedCustomer}
-                                onClick={handleCheckout}
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="spinner-small" size={24} />
-                                        <span>Procesando...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>Finalizar Venta</span>
-                                        <ArrowRight size={22} />
-                                    </>
-                                )}
-                            </button>
+                    <div className={styles.searchBox}>
+                        <label className={styles.inputLabel}>Buscar Productos</label>
+                        <div className={styles.searchInputWrapper}>
+                            <Search className={styles.searchIcon} size={18} />
+                            <input type="text" placeholder="Buscar..." className={`input ${styles.searchInput}`} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                         </div>
                     </div>
                 </div>
 
-                {/* Mobile Cart Toggle */}
-                <button className={`button ${styles.mobileToggle}`} onClick={() => setShowCart(true)}>
-                    <ShoppingCart size={24} />
-                    {cart.length > 0 && <span className={styles.cartBadge}>{cart.length}</span>}
-                    <span>Ver Carrito</span>
-                </button>
-
-                {success && (
-                    <div className={styles.successToast}>
-                        <CheckCircle size={24} />
-                        <span>{success}</span>
-                    </div>
-                )}
-
-                {/* Ticket Modal */}
-                {lastSale && (
-                    <div className={styles.modalOverlay}>
-                        <div className={styles.ticketModal}>
-                            <div className={styles.modalHeader}>
-                                <div className={styles.successIconBox}>
-                                    <CheckCircle size={32} />
-                                </div>
-                                <h2 className={styles.modalTitle}>¡Venta Exitosa!</h2>
-                                <p className={styles.modalDescription}>La transacción se ha registrado correctamente.</p>
+                <div className={styles.productGrid}>
+                    {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(product => (
+                        <div key={product.id} className={styles.productCard}>
+                            <div className={styles.imageContainer}>
+                                {product.image_url ? <img src={product.image_url} alt={product.name} className={styles.image} /> : <Package className={styles.placeholderIcon} size={64} />}
                             </div>
-
-                            <div className={styles.buttonGroup}>
-                                <button onClick={() => window.print()} className={styles.printBtn}>
-                                    <Printer size={20} />
-                                    Imprimir Ticket
-                                </button>
-
-                                <button onClick={() => setLastSale(null)} className={styles.closeModalBtn}>
-                                    Cerrar / Nueva Venta
-                                </button>
+                            <div className={styles.infoBox}>
+                                <h4 className={styles.productName}>{product.name}</h4>
+                                <div className={styles.priceRow}>
+                                    <div className={styles.price}>{formatCurrency(product.price)}</div>
+                                    <div className={styles.pvBadge}>{product.pv_points} PV</div>
+                                </div>
+                                <div className={`${styles.stock} ${product.stock < 10 ? styles.stockLow : styles.stockNormal}`}>{product.stock} unidades</div>
+                                <button className={styles.addButton} onClick={() => addToCart(product)}><Plus size={18} /> Añadir</button>
                             </div>
                         </div>
-                    </div>
-                )}
-
+                    ))}
+                </div>
             </div>
-            {/* Hidden Ticket Component for Print at the root level for best print reliability */}
-            <Ticket saleData={lastSale} branchName={lastSale?.branchName} sellerName={lastSale?.sellerName} />
-        </>
+
+            <div className={`${styles.cartContainer} ${showCart ? styles.cartContainerOpen : ''}`}>
+                <div className={styles.cartCard}>
+                    <div className={styles.cartHeader}>
+                        <div className={styles.cartTitleBox}><ShoppingCart size={24} /><h3 className={styles.cartTitle}>Venta Actual</h3></div>
+                        <button className={styles.closeCart} onClick={() => setShowCart(false)}><X size={24} /></button>
+                    </div>
+
+                    <div className={styles.customerSection}>
+                        <label className={styles.inputLabel}>Cliente</label>
+                        {!selectedCustomer ? (
+                            <div style={{ position: 'relative' }}>
+                                <input type="text" className="input" placeholder="Buscar cliente..." value={customerSearch} onChange={e => searchCustomers(e.target.value)} />
+                                {customers.length > 0 && (
+                                    <div className={styles.searchResults}>
+                                        {customers.map(c => (
+                                            <div key={c.id} onClick={() => setSelectedCustomer(c)} className={styles.searchItem}>
+                                                <div>{c.full_name}</div><div style={{ fontSize: '0.7rem', opacity: 0.6 }}>ID: {c.document_id}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles.selectedCustomer}>
+                                <div className={styles.customerInfo}><div>{selectedCustomer.full_name}</div><div style={{ fontSize: '0.7rem', opacity: 0.6 }}>#{selectedCustomer.document_id}</div></div>
+                                <button onClick={() => setSelectedCustomer(null)}><X size={16} /></button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={styles.cartItems}>
+                        {cart.length === 0 ? <p className={styles.emptyCart}>Carrito vacío</p> : cart.map(item => (
+                            <div key={`${item.id}-${item.isGift}`} className={styles.cartItem}>
+                                <div className={styles.itemMain}>
+                                    <div className={styles.itemName}>{item.name}{item.isGift && <span className={styles.giftLabel}>REGALO</span>}</div>
+                                    <div className={styles.itemMeta}>{item.isGift ? '0 Bs' : formatCurrency(item.price)} • {item.isGift ? '0' : item.pv_points} PV</div>
+                                </div>
+                                <div className={styles.qtyControls}>
+                                    <button onClick={() => updateQuantity(item.id, item.isGift, -1)}><Minus size={14} /></button>
+                                    <span>{item.quantity}</span>
+                                    <button onClick={() => updateQuantity(item.id, item.isGift, 1)}><Plus size={14} /></button>
+                                    <button onClick={() => removeFromCart(item.id, item.isGift)}><Trash2 size={18} /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className={styles.cartFooter}>
+                        <div className={styles.totalRow}><span>Total</span><span>{formatCurrency(totalAmount)}</span></div>
+                        <button className={styles.checkoutBtn} disabled={loading || cart.length === 0 || !selectedCustomer} onClick={handleCheckout}>Finalizar Venta</button>
+                    </div>
+                </div>
+            </div>
+
+            {success && <div className={styles.successToast}><CheckCircle size={24} /><span>{success}</span></div>}
+
+            {lastSale && (
+                <div className={`${styles.modalOverlay} ${styles['print-modal-visible']}`}>
+                    <div className={styles.ticketModal}>
+                        <CheckCircle size={48} color="#10b981" />
+                        <h2>¡Venta Exitosa!</h2>
+                        <div className={styles.buttonGroup}>
+                            <button onClick={handlePrint} className={styles.printBtn}><Printer size={20} /> Imprimir Ticket</button>
+                            <button onClick={() => setLastSale(null)} className={styles.closeModalBtn}>Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div style={{ display: 'none' }}>
+                {lastSale && <Ticket saleData={lastSale} branchName={profile?.branch_name} sellerName={profile?.full_name} />}
+            </div>
+        </div>
     )
 }

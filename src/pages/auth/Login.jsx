@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { useNavigate, Link } from 'react-router-dom'
 import { Mail, Lock, Sparkles, Eye, EyeOff, ArrowRight, ShieldAlert } from 'lucide-react'
 import styles from './Auth.module.css'
-import logo from '../../assets/logo.png'
+import logo from '../../assets/logo-full.png'
 
 export default function Login() {
     const [identifier, setIdentifier] = useState('')

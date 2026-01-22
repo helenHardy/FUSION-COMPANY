@@ -259,17 +259,17 @@
     text-align: right;
 }
 
-.structureHeader {
+.sectionHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.25rem;
 }
 
-.addReqBtn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: white;
+.addLevelBtn {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: var(--primary-light);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.7rem;
@@ -278,6 +278,12 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.addLevelBtn:hover {
+    background: var(--primary-color);
+    color: white;
 }
 
 .structureRow {
@@ -285,6 +291,22 @@
     grid-template-columns: 1.5fr 1fr auto;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
+}
+
+.structureRow select {
+    appearance: none;
+    cursor: pointer;
+}
+
+.structureRow select option {
+    background-color: #1e293b;
+    /* Slate 800 for dark mode compatibility */
+    color: white;
+}
+
+[data-theme='light'] .structureRow select option {
+    background-color: white;
+    color: #1e293b;
 }
 
 .modalActions {

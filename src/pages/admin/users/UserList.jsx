@@ -1,12 +1,14 @@
-
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
-import { Users, Search, Filter, ShieldAlert, BadgeDollarSign, UserCheck, Loader2, Edit2, Shield, Save } from 'lucide-react'
+import { useAuth } from '../../../context/AuthContext'
+import { Users, Search, Filter, ShieldAlert, BadgeDollarSign, UserCheck, Loader2, Edit2, Shield, Save, GitBranch, Trash2, UserX, Key } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { formatCurrency, formatDate } from '../../../lib/utils'
 import Modal from '../../../components/ui/Modal'
 import styles from './UserList.module.css'
 
 export default function UserList() {
+    const { profile } = useAuth()
     const [users, setUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
@@ -46,6 +48,58 @@ export default function UserList() {
         setSelectedUser(user)
         setNewRole(user.role)
         setIsModalOpen(true)
+    }
+
+    const handleToggleStatus = async (user) => {
+        try {
+            const { data, error } = await supabase.rpc('toggle_user_status', {
+                p_target_uuid: user.id
+            })
+            if (error) throw error
+            fetchUsers()
+        } catch (err) {
+            console.error("Error toggling status:", err)
+            alert("Error al cambiar estado")
+        }
+    }
+
+    const handleDelete = async (user) => {
+        const confirmMsg = `¿Estás SEGURO de eliminar a ${user.full_name}? \n\nSus afiliados directos serán reasignados a su patrocinador (${user.sponsor?.full_name || 'el sistema'}) para no romper la red.`
+        if (!confirm(confirmMsg)) return
+
+        try {
+            const { error } = await supabase.rpc('delete_user_safely', {
+                p_target_uuid: user.id
+            })
+            if (error) throw error
+            alert('Usuario eliminado y red reasignada exitosamente.')
+            fetchUsers()
+        } catch (err) {
+            console.error("Error deleting user:", err)
+            alert("Error al eliminar usuario: " + err.message)
+        }
+    }
+
+    const handleResetPassword = async (user) => {
+        const newPassword = prompt(`Ingresa la nueva contraseña para ${user.full_name}:`)
+        if (!newPassword) return
+        if (newPassword.length < 6) {
+            alert("La contraseña debe tener al menos 6 caracteres")
+            return
+        }
+
+        try {
+            const { error } = await supabase.rpc('admin_reset_password', {
+                p_target_user_id: user.id,
+                p_admin_id: profile.id,
+                p_new_password: newPassword
+            })
+            if (error) throw error
+            alert('Contraseña restablecida correctamente')
+        } catch (err) {
+            console.error("Error resetting password:", err)
+            alert("Error al restablecer contraseña: " + err.message)
+        }
     }
 
     const saveRole = async () => {
@@ -181,13 +235,47 @@ export default function UserList() {
                                         </span>
                                     </td>
                                     <td className={styles.td}>
-                                        <button
-                                            className={styles.actionBtn}
-                                            onClick={() => handleEditRole(user)}
-                                            title="Cambiar Rol"
-                                        >
-                                            <Shield size={18} />
-                                        </button>
+                                        <div className={styles.actions}>
+                                            <Link
+                                                to={`/admin/network/${user.id}`}
+                                                className={styles.actionBtn}
+                                                style={{ color: '#38bdf8' }}
+                                                title="Ver Red"
+                                            >
+                                                <GitBranch size={18} />
+                                            </Link>
+                                            <button
+                                                className={styles.actionBtn}
+                                                style={{ color: user.status === 'activo' ? '#f87171' : '#10b981' }}
+                                                onClick={() => handleToggleStatus(user)}
+                                                title={user.status === 'activo' ? 'Inactivar' : 'Activar'}
+                                            >
+                                                {user.status === 'activo' ? <UserX size={18} /> : <UserCheck size={18} />}
+                                            </button>
+                                            <button
+                                                className={styles.actionBtn}
+                                                onClick={() => handleEditRole(user)}
+                                                title="Cambiar Rol"
+                                            >
+                                                <Shield size={18} />
+                                            </button>
+                                            <button
+                                                className={styles.actionBtn}
+                                                style={{ color: '#fbbf24' }}
+                                                onClick={() => handleResetPassword(user)}
+                                                title="Restablecer Contraseña"
+                                            >
+                                                <Key size={18} />
+                                            </button>
+                                            <button
+                                                className={styles.actionBtn}
+                                                style={{ color: '#f87171' }}
+                                                onClick={() => handleDelete(user)}
+                                                title="Eliminar Seguro"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

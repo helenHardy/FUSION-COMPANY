@@ -84,7 +84,7 @@ export default function Register() {
             if (authError) throw authError
 
             if (authData.user) {
-                alert('Usuario registrado exitosamente como nuevo afiliado.')
+                alert('Registro completado. El nuevo afiliado ha sido creado con estado PENDIENTE. Por favor, realiza el pago del combo con el administrador para activar la cuenta y recibir los beneficios.')
                 navigate('/profile')
             }
 
@@ -209,7 +209,7 @@ export default function Register() {
                         ) : (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <UserPlus size={20} />
-                                Registrar y Activar Socio
+                                Registrar Nuevo Socio
                             </div>
                         )}
                     </button>
@@ -218,7 +218,7 @@ export default function Register() {
                 <div className={styles.infoBox}>
                     <Sparkles size={20} style={{ flexShrink: 0 }} />
                     <p>
-                        Al registrar al nuevo socio, se le asignará automáticamente bajo tu patrocinio y se activará su cuenta con el combo seleccionado.
+                        Al registrar al nuevo socio, su cuenta quedará en estado <strong>Pendiente</strong>. Debes contactar al administrador para realizar el pago del combo y activar los beneficios (puntos y comisiones).
                     </p>
                 </div>
             </div>

@@ -260,23 +260,48 @@ export default function RanksConfig() {
                         </section>
 
                         <section className={styles.section}>
-                            <h4 className={styles.sectionTitle}><Layers size={16} color="var(--primary-light)" /> Regalías (%)</h4>
+                            <div className={styles.sectionHeader}>
+                                <h4 className={styles.sectionTitle}><Layers size={16} color="var(--primary-light)" /> Regalías (%)</h4>
+                                <button
+                                    type="button"
+                                    className={styles.addLevelBtn}
+                                    onClick={() => {
+                                        // Find the current max level displayed (at least 10)
+                                        const currentMax = Object.keys(formData.royalties_config).reduce((max, key) => {
+                                            const num = parseInt(key.replace('N', ''));
+                                            return num > max ? num : max;
+                                        }, 10);
+                                        updateLevelPerc(currentMax + 1, 0);
+                                    }}
+                                >
+                                    <Plus size={14} /> Nivel
+                                </button>
+                            </div>
                             <div className={styles.royaltyGrid}>
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(lvl => (
-                                    <div key={lvl} className={styles.royaltyItem}>
-                                        <span className={styles.lvlLabel}>N{lvl}</span>
-                                        <input type="number" step="0.1" className={styles.lvlInput} value={formData.royalties_config[`N${lvl}`] || 0} onChange={e => updateLevelPerc(lvl, e.target.value)} />
-                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>%</span>
-                                    </div>
-                                ))}
+                                {Array.from({ length: Math.max(10, Object.keys(formData.royalties_config).length) }).map((_, i) => {
+                                    const lvl = i + 1;
+                                    return (
+                                        <div key={lvl} className={styles.royaltyItem}>
+                                            <span className={styles.lvlLabel}>N{lvl}</span>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                className={styles.lvlInput}
+                                                value={formData.royalties_config[`N${lvl}`] || 0}
+                                                onChange={e => updateLevelPerc(lvl, e.target.value)}
+                                            />
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>%</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </section>
                     </div>
 
                     <section className={styles.section}>
-                        <div className={styles.structureHeader}>
+                        <div className={styles.sectionHeader}>
                             <h4 className={styles.sectionTitle}><Users size={16} color="var(--primary-light)" /> Estructura Necesaria</h4>
-                            <button type="button" className={styles.addReqBtn} onClick={addStructureReq}>
+                            <button type="button" className={styles.addLevelBtn} onClick={addStructureReq}>
                                 <Plus size={14} /> Requisito
                             </button>
                         </div>

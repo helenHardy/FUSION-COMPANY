@@ -5,11 +5,11 @@ import {
     LayoutDashboard, Users, User, Store, Package, LogOut,
     BarChart, GitBranch, Boxes, Trophy, DollarSign, Wallet,
     BadgeDollarSign, Crown, ShoppingBag, Menu, X, Bell, Search,
-    Sun, Moon, CheckCircle
+    Sun, Moon, CheckCircle, UserCheck
 } from 'lucide-react'
 import { useState } from 'react'
 import { useTheme } from '../../context/ThemeContext'
-import logo from '../../assets/logo.png'
+import logo from '../../assets/logo-icon.png'
 
 export default function Layout() {
     const { signOut, profile } = useAuth()
@@ -37,7 +37,8 @@ export default function Layout() {
 
     const adminItems = [
         { path: '/admin/users', label: 'Usuarios', icon: <Users size={20} /> },
-        { path: '/admin/branches', label: 'Sucursales', icon: <Store size={20} /> },
+        { path: '/admin/pending-activations', label: 'Activaciones', icon: <UserCheck size={20} /> },
+        { path: '/admin/branches', label: 'Store', icon: <Store size={20} /> },
         { path: '/admin/products', label: 'Productos', icon: <Package size={20} /> },
         { path: '/admin/combos', label: 'Combos', icon: <ShoppingBag size={20} /> },
         { path: '/admin/inventory', label: 'Inventario', icon: <Boxes size={20} /> },
@@ -202,10 +203,9 @@ export default function Layout() {
                 }
 
                 .brand-logo {
-                    width: 42px;
-                    height: 42px;
-                    background: var(--fusion-gradient);
-                    border-radius: 12px;
+                    width: 48px;
+                    height: 48px;
+                    background: transparent;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -213,7 +213,6 @@ export default function Layout() {
                     font-weight: 900;
                     font-size: 1.4rem;
                     font-family: 'Outfit', sans-serif;
-                    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
                 }
 
                 .brand-text {
