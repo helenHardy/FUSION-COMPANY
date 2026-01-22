@@ -11,9 +11,9 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
         <div id="printable-ticket" className={styles.ticketContainer}>
             {/* Header */}
             <div className={styles.ticketHeader}>
-                <img src={logo} alt="Fusion Logo" style={{ width: '40px', height: '40px', marginBottom: '5px' }} />
+                {/* <img src={logo} alt="Fusion Logo" style={{ width: '40px', height: '40px', marginBottom: '5px' }} /> */}
                 <div className={styles.ticketTitle}>COMPROBANTE VENTA</div>
-                <div className={styles.ticketSubtitle}>FUSION COMPANY</div>
+                {/* <div className={styles.ticketSubtitle}>FUSION COMPANY</div> */}
             </div>
 
             <div className={styles.divider}>==========================</div>
@@ -98,7 +98,7 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
             <div className={styles.ticketFooter}>
                 <div className={styles.thankYou}>¡GRACIAS POR SU COMPRA!</div>
                 <div className={styles.validez}>Este comprobante no tiene valor fiscal.</div>
-                <div className={styles.version}>FUSION APP v4.0 PRO</div>
+                {/* <div className={styles.version}>FUSION APP v4.0 PRO</div> */}
             </div>
         </div>
     )

@@ -264,7 +264,15 @@ export default function POS() {
                             </div>
                         ) : (
                             <div className={styles.selectedCustomer}>
-                                <div className={styles.customerInfo}><div>{selectedCustomer.full_name}</div><div style={{ fontSize: '0.7rem', opacity: 0.6 }}>#{selectedCustomer.document_id}</div></div>
+                                <div className={styles.customerInfo}>
+                                    <div>{selectedCustomer.full_name}</div>
+                                    <div style={{ fontSize: '0.7rem', opacity: 0.6 }}>#{selectedCustomer.document_id}</div>
+                                    {(selectedCustomer.free_products_count > 0) && (
+                                        <div style={{ color: '#22d3ee', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                                            <Package size={12} /> {selectedCustomer.free_products_count} Regalos Disponibles
+                                        </div>
+                                    )}
+                                </div>
                                 <button onClick={() => setSelectedCustomer(null)}><X size={16} /></button>
                             </div>
                         )}

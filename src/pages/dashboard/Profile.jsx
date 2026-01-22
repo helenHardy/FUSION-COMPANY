@@ -165,6 +165,18 @@ export default function Profile() {
                     </div>
                 </div>
 
+                <div className={`${styles.infoCard} glass`}>
+                    <div className={styles.iconContainer}>
+                        <Package size={20} />
+                    </div>
+                    <div>
+                        <span className={styles.fieldLabel}>Regalos Disponibles</span>
+                        <div className={`${styles.fieldValue} ${styles.rankValue}`} style={{ color: '#22d3ee' }}>
+                            {profile.free_products_count || 0} productos
+                        </div>
+                    </div>
+                </div>
+
                 {/* Security Section */}
                 <div className={styles.benefitSection}>
                     <div className={`${styles.benefitCard} glass`} style={{ borderLeftColor: '#f87171' }}>
