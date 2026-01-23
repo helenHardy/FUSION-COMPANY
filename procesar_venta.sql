@@ -39,6 +39,11 @@ BEGIN
     );
 
     -- B. Descontar Stock del inventario de la sucursal
+    -- Verificamos si existe el registro de inventario antes de descontar
+    IF NOT EXISTS (SELECT 1 FROM public.inventory WHERE branch_id = p_branch_id AND product_id = v_item.product_id) THEN
+        RAISE EXCEPTION 'El producto con ID % no tiene inventario en esta sucursal.', v_item.product_id;
+    END IF;
+
     UPDATE public.inventory 
     SET stock = stock - v_item.quantity 
     WHERE branch_id = p_branch_id AND product_id = v_item.product_id;
@@ -52,6 +57,15 @@ BEGIN
       UPDATE public.profiles 
       SET free_products_count = GREATEST(0, COALESCE(free_products_count, 0) - v_item.quantity)
       WHERE id = p_user_id;
+
+      -- También descontamos de gift_balance si existe esa columna (v2 compatible)
+      BEGIN
+        UPDATE public.profiles 
+        SET gift_balance = GREATEST(0, COALESCE(gift_balance, 0) - v_item.quantity)
+        WHERE id = p_user_id;
+      EXCEPTION WHEN OTHERS THEN
+        NULL; -- La columna podría no existir aún en todos los entornos
+      END;
     END IF;
   END LOOP;
 

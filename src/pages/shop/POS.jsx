@@ -238,6 +238,16 @@ export default function POS() {
                         </div>
                     ))}
                 </div>
+
+                <button className={styles.mobileToggle} onClick={() => setShowCart(true)}>
+                    <ShoppingCart size={24} />
+                    <span>Carrito</span>
+                    {cart.length > 0 && (
+                        <span className={styles.cartBadge}>
+                            {cart.reduce((s, i) => s + i.quantity, 0)}
+                        </span>
+                    )}
+                </button>
             </div>
 
             <div className={`${styles.cartContainer} ${showCart ? styles.cartContainerOpen : ''}`}>
@@ -279,20 +289,35 @@ export default function POS() {
                     </div>
 
                     <div className={styles.cartItems}>
-                        {cart.length === 0 ? <p className={styles.emptyCart}>Carrito vacío</p> : cart.map(item => (
-                            <div key={`${item.id}-${item.isGift}`} className={styles.cartItem}>
-                                <div className={styles.itemMain}>
-                                    <div className={styles.itemName}>{item.name}{item.isGift && <span className={styles.giftLabel}>REGALO</span>}</div>
-                                    <div className={styles.itemMeta}>{item.isGift ? '0 Bs' : formatCurrency(item.price)} • {item.isGift ? '0' : item.pv_points} PV</div>
+                        {cart.length === 0 ? (
+                            <p className={styles.emptyCart}>Carrito vacío</p>
+                        ) : (
+                            cart.map(item => (
+                                <div key={`${item.id}-${item.isGift}`} className={styles.cartItem}>
+                                    <div className={styles.itemMain}>
+                                        <div className={styles.itemName}>
+                                            {item.name}
+                                            {item.isGift && <span className={styles.giftLabel}>REGALO</span>}
+                                        </div>
+                                        <div className={styles.itemMeta}>
+                                            {item.isGift ? '0.00 Bs' : formatCurrency(item.price)} • {item.isGift ? '0' : item.pv_points} PV
+                                        </div>
+                                    </div>
+                                    <div className={styles.qtyControls}>
+                                        <button className={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.isGift, -1)}>
+                                            <Minus size={14} />
+                                        </button>
+                                        <span className={styles.qtyValue}>{item.quantity}</span>
+                                        <button className={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.isGift, 1)}>
+                                            <Plus size={14} />
+                                        </button>
+                                        <button className={styles.deleteBtn} onClick={() => removeFromCart(item.id, item.isGift)}>
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className={styles.qtyControls}>
-                                    <button onClick={() => updateQuantity(item.id, item.isGift, -1)}><Minus size={14} /></button>
-                                    <span>{item.quantity}</span>
-                                    <button onClick={() => updateQuantity(item.id, item.isGift, 1)}><Plus size={14} /></button>
-                                    <button onClick={() => removeFromCart(item.id, item.isGift)}><Trash2 size={18} /></button>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
 
                     <div className={styles.cartFooter}>
