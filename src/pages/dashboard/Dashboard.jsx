@@ -72,16 +72,16 @@ export default function Dashboard() {
             {/* Hero Section */}
             <div className={styles.hero}>
                 <div className={styles.heroContent}>
-                    <div className={styles.heroTag}>
+                    {/* <div className={styles.heroTag}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Sparkles size={14} />
                             Comando Fusion v2.0
                         </span>
-                    </div>
+                    </div> */}
                     <h1 className={styles.heroTitle}>Bienvenido, {profile?.full_name?.split(' ')[0]}</h1>
-                    <p className={styles.heroSubtitle}>
+                    {/* <p className={styles.heroSubtitle}>
                         Gestiona tu red y monitorea tus ganancias en tiempo real con nuestra tecnología de sincronización avanzada.
-                    </p>
+                    </p> */}
                 </div>
                 <div className={styles.heroDecor} />
             </div>
