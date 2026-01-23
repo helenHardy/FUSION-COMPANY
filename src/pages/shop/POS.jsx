@@ -31,6 +31,12 @@ export default function POS() {
         }
     }, [selectedBranch])
 
+    useEffect(() => {
+        if (profile?.role === 'afiliado' && !selectedCustomer) {
+            setSelectedCustomer(profile)
+        }
+    }, [profile, selectedCustomer])
+
     const fetchBranches = async () => {
         const { data } = await supabase.from('sucursales').select('*').eq('status', 'activo')
         setBranches(data || [])
@@ -139,14 +145,15 @@ export default function POS() {
     const totalPV = cart.reduce((sum, item) => sum + (item.isGift ? 0 : item.pv_points * item.quantity), 0)
 
     const handleCheckout = async () => {
-        if (!selectedCustomer) { alert("Por favor seleccione un cliente"); return }
+        const isManager = ['admin', 'sucursal', 'cajero'].includes(profile.role)
+        if (!selectedCustomer && !isManager) { alert("Por favor seleccione un cliente"); return }
         if (cart.length === 0) return
         setLoading(true)
         try {
             const items = cart.map(item => ({ product_id: item.id, quantity: item.quantity, price: item.price, pv: item.pv_points, price_at_sale: item.price, pv_at_sale: item.pv_points, is_gift: item.isGift }))
             const isManager = ['admin', 'sucursal', 'cajero'].includes(profile.role)
             let rpcName = isManager ? 'process_sale' : 'create_pending_order'
-            let params = { p_user_id: selectedCustomer.id, p_branch_id: selectedBranch, p_seller_id: profile.id, p_items: items }
+            let params = { p_user_id: selectedCustomer?.id || null, p_branch_id: selectedBranch, p_seller_id: profile.id, p_items: items }
             if (!isManager) { params.p_total_amount = totalAmount; params.p_total_pv = totalPV }
 
             const { error } = await supabase.rpc(rpcName, params)
@@ -261,7 +268,14 @@ export default function POS() {
                         <label className={styles.inputLabel}>Cliente</label>
                         {!selectedCustomer ? (
                             <div style={{ position: 'relative' }}>
-                                <input type="text" className="input" placeholder="Buscar cliente..." value={customerSearch} onChange={e => searchCustomers(e.target.value)} />
+                                <input
+                                    type="text"
+                                    className="input"
+                                    placeholder={profile?.role === 'afiliado' ? "Cargando cliente..." : "Buscar cliente..."}
+                                    value={customerSearch}
+                                    onChange={e => searchCustomers(e.target.value)}
+                                    disabled={profile?.role === 'afiliado'}
+                                />
                                 {customers.length > 0 && (
                                     <div className={styles.searchResults}>
                                         {customers.map(c => (
@@ -283,7 +297,9 @@ export default function POS() {
                                         </div>
                                     )}
                                 </div>
-                                <button onClick={() => setSelectedCustomer(null)}><X size={16} /></button>
+                                {profile?.role !== 'afiliado' && (
+                                    <button onClick={() => setSelectedCustomer(null)}><X size={16} /></button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -322,7 +338,13 @@ export default function POS() {
 
                     <div className={styles.cartFooter}>
                         <div className={styles.totalRow}><span>Total</span><span>{formatCurrency(totalAmount)}</span></div>
-                        <button className={styles.checkoutBtn} disabled={loading || cart.length === 0 || !selectedCustomer} onClick={handleCheckout}>Finalizar Venta</button>
+                        <button
+                            className={styles.checkoutBtn}
+                            disabled={loading || cart.length === 0 || (!selectedCustomer && !['admin', 'sucursal', 'cajero'].includes(profile?.role))}
+                            onClick={handleCheckout}
+                        >
+                            {['admin', 'sucursal', 'cajero'].includes(profile?.role) && !selectedCustomer ? 'Venta Anónima' : 'Finalizar Venta'}
+                        </button>
                     </div>
                 </div>
             </div>

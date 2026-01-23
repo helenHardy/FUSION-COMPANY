@@ -227,58 +227,75 @@
     }
 }
 
-.editNameBox {
+.editDataBtn {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.editDataBtn:hover {
+    background: #10b981;
+    color: white;
+}
+
+.bankEditForm {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
-}
-
-.editInput {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    color: var(--text-main);
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-align: center;
-    width: 300px;
-}
-
-.editActions {
-    display: flex;
     gap: 8px;
+    margin-top: 8px;
 }
 
-.saveBtn {
-    background: var(--primary-color);
+.bankInput {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.bankActions {
+    display: flex;
+    gap: 6px;
+}
+
+.bankSaveBtn {
+    flex: 1;
+    background: #10b981;
     color: white;
     border: none;
-    padding: 0.5rem 1.2rem;
+    padding: 6px;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.8rem;
     cursor: pointer;
 }
 
-.cancelBtn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    padding: 0.5rem 1.2rem;
+.bankCancelBtn {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f87171;
+    padding: 6px 12px;
     border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
+    font-weight: 700;
 }
 
-.miniEditBtn {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: -8px;
+.bankDisplay {
+    margin-top: 4px;
+}
+
+.accountSub {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 2px;
 }
 
 .passBtn {

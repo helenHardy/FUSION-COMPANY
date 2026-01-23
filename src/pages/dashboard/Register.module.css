@@ -131,6 +131,19 @@
     line-height: 1.5;
 }
 
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
 @media (max-width: 640px) {
     .formCard {
         padding: 2rem;

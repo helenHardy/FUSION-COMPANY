@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import styles from './NetworkTree.module.css'
 
-function NetworkNode({ affiliate, level = 0 }) {
+function NetworkNode({ affiliate }) {
     const [isOpen, setIsOpen] = useState(false)
     const [children, setChildren] = useState([])
     const [loading, setLoading] = useState(false)
@@ -39,57 +39,49 @@ function NetworkNode({ affiliate, level = 0 }) {
     const isActive = affiliate.status === 'activo'
 
     return (
-        <div className={styles.nodeWrapper}>
-            <div
-                onClick={toggleOpen}
-                className={`${styles.nodeCard} ${isOpen ? styles.nodeCardOpen : ''}`}
-            >
-                <div className={`${styles.chevronIcon} ${isOpen ? styles.chevronIconOpen : ''}`}>
-                    <ChevronDown size={20} />
-                </div>
+        <div className={styles.branch}>
+            <div className={styles.nodeContainer}>
+                <div
+                    onClick={toggleOpen}
+                    className={`${styles.nodeCard} ${isOpen ? styles.nodeCardOpen : ''} ${isActive ? styles.activeCard : styles.inactiveCard}`}
+                >
+                    <div className={`${styles.avatarContainer} ${isAdmin ? styles.avatarAdmin : styles.avatarUser}`}>
+                        {isAdmin ? <Shield size={24} /> : <User size={24} />}
+                        <div className={styles.rankBadge}>{affiliate.current_rank || 'Bronce'}</div>
+                    </div>
 
-                <div className={`${styles.avatarBox} ${isAdmin ? styles.avatarAdmin : styles.avatarUser}`}>
-                    {isAdmin ? <Shield size={28} /> : <User size={28} />}
-                </div>
-
-                <div className={styles.nodeContent}>
-                    <div className={styles.nodeName}>{affiliate.full_name}</div>
-                    <div className={styles.nodeMeta}>
-                        <div className={styles.metaItem}>
-                            <Target size={14} color="var(--primary-color)" />
-                            <span>Rango:</span>
-                            <span className={styles.metaValue}>{affiliate.current_rank || 'Bronce'}</span>
-                        </div>
-                        <div className={styles.metaItem}>
-                            <Activity size={14} color="#f59e0b" />
-                            <span>PV:</span>
-                            <span className={styles.metaValue}>{affiliate.pv || 0}</span>
-                        </div>
-                        <div className={styles.metaItem}>
-                            <TrendingUp size={14} color="#22d3ee" />
-                            <span>PVG:</span>
-                            <span className={styles.metaValue}>{affiliate.pvg || 0}</span>
+                    <div className={styles.nodeBody}>
+                        <div className={styles.nodeName}>{affiliate.full_name}</div>
+                        <div className={styles.nodeStats}>
+                            <div className={styles.statLine}>
+                                <Activity size={10} /> <span>{affiliate.pv || 0} PV</span>
+                            </div>
+                            <div className={styles.statLine}>
+                                <TrendingUp size={10} /> <span>{affiliate.pvg || 0} PVG</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className={`${styles.statusIndicator} ${isActive ? styles.active : styles.inactive}`}>
-                    {affiliate.status}
+                    {loading ? (
+                        <div className={styles.nodeLoading}>
+                            <Loader2 className={styles.spinIcon} size={14} />
+                        </div>
+                    ) : (
+                        <div className={`${styles.nodeToggle} ${isOpen ? styles.nodeToggleOpen : ''}`}>
+                            <ChevronDown size={14} />
+                        </div>
+                    )}
                 </div>
             </div>
 
             {isOpen && (
-                <div className={styles.childrenBox}>
-                    {loading ? (
-                        <div className={styles.emptyState}>
-                            <div className={styles.spinner} />
-                            Cargando red...
-                        </div>
-                    ) : children.length > 0 ? (
-                        children.map(child => <NetworkNode key={child.id} affiliate={child} level={level + 1} />)
-                    ) : (
-                        <div className={styles.emptyState}>
-                            No hay afiliados directos en este nivel
+                <div className={styles.childrenContainer}>
+                    {children.length > 0 ? (
+                        children.map(child => <NetworkNode key={child.id} affiliate={child} />)
+                    ) : !loading && (
+                        <div className={styles.leafEnd}>
+                            <div className={styles.leafLine}></div>
+                            <span className={styles.leafText}>Sin afiliados</span>
                         </div>
                     )}
                 </div>
@@ -112,35 +104,27 @@ export default function NetworkTree() {
 
     if (loading || !rootUser) {
         return (
-            <div className={styles.container} style={{ display: 'flex', justifyContent: 'center', padding: '5rem' }}>
+            <div className={styles.loadingContainer}>
                 <Loader2 className={styles.spinner} size={40} />
             </div>
         )
     }
 
     return (
-        <div className={styles.container}>
+        <div className={styles.wrapper}>
             <header className={styles.header}>
                 <h1 className={styles.title}>
                     Red de <span className={styles.highlight}>Socios</span>
                 </h1>
                 <p className={styles.subtitle}>
-                    Visualiza y gestiona el crecimiento de tu organización Fusion en tiempo real.
+                    Visualiza la expansión de tu organización Univel de forma interactiva.
                 </p>
             </header>
 
-            <div className={`${styles.overviewCard} glass`}>
-                <div className={styles.overviewIcon}>
-                    <Users size={28} />
+            <div className={styles.viewPort}>
+                <div className={styles.treeRoot}>
+                    <NetworkNode affiliate={rootUser} />
                 </div>
-                <div>
-                    <div className={styles.overviewTitle}>Estructura Genealógica</div>
-                    <div className={styles.overviewDesc}>Haz clic en los socios para expandir y ver su red descendente.</div>
-                </div>
-            </div>
-
-            <div className={styles.treeRoot}>
-                <NetworkNode affiliate={rootUser} />
             </div>
         </div>
     )

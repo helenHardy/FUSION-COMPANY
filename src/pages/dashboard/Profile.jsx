@@ -7,8 +7,11 @@ import styles from './Profile.module.css'
 
 export default function Profile() {
     const { profile, user, refreshProfile } = useAuth()
-    const [editing, setEditing] = useState(false)
-    const [newName, setNewName] = useState(profile?.full_name || '')
+    const [editingBank, setEditingBank] = useState(false)
+    const [bankData, setBankData] = useState({
+        bank_name: profile?.bank_name || '',
+        account_number: profile?.account_number || ''
+    })
     const [saving, setSaving] = useState(false)
 
     // Password change state
@@ -16,20 +19,30 @@ export default function Profile() {
     const [passwords, setPasswords] = useState({ new: '', confirm: '' })
     const [passLoading, setPassLoading] = useState(false)
 
-    const handleUpdateName = async () => {
-        if (!newName.trim()) return
+    const handleUpdateBank = async () => {
+        if (!bankData.bank_name.trim() || !bankData.account_number.trim()) {
+            alert("Por favor complete ambos campos bancarios")
+            return
+        }
         setSaving(true)
         try {
-            const { error } = await supabase.rpc('update_profile_data', {
-                p_user_id: profile.id,
-                p_full_name: newName
-            })
+            // We'll update the profile directly as we don't have a specific bank RPC, 
+            // or we can use a generic update if available. 
+            // Since we added these columns, a direct update is fine if RLS allows.
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    bank_name: bankData.bank_name,
+                    account_number: bankData.account_number
+                })
+                .eq('id', profile.id)
+
             if (error) throw error
             await refreshProfile()
-            setEditing(false)
-            alert('Perfil actualizado correctamente')
+            setEditingBank(false)
+            alert('Datos bancarios vinculados correctamente. Ahora son de solo lectura.')
         } catch (err) {
-            console.error("Error al actualizar perfil:", err)
+            console.error("Error al actualizar datos bancarios:", err)
             alert("Error: " + err.message)
         } finally {
             setSaving(false)
@@ -80,32 +93,8 @@ export default function Profile() {
                 <div className={styles.avatarBox}>
                     <User size={48} />
                 </div>
-                {editing ? (
-                    <div className={styles.editNameBox}>
-                        <input
-                            type="text"
-                            className={styles.editInput}
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            placeholder="Nombre completo"
-                        />
-                        <div className={styles.editActions}>
-                            <button className={styles.saveBtn} onClick={handleUpdateName} disabled={saving}>
-                                {saving ? 'Guardando...' : 'Guardar'}
-                            </button>
-                            <button className={styles.cancelBtn} onClick={() => { setEditing(false); setNewName(profile.full_name); }}>
-                                Cancelar
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        <h1 className={styles.userName}>{profile.full_name}</h1>
-                        <button className={styles.miniEditBtn} onClick={() => setEditing(true)}>
-                            Editar Nombre
-                        </button>
-                    </>
-                )}
+                <h1 className={styles.userName}>{profile.full_name}</h1>
+                <div className={styles.userRole}>{profile.role}</div>
                 <div className={styles.userRole}>{profile.role}</div>
 
                 <div className={`${styles.statusBadge} ${isActive ? styles.statusActive : styles.statusInactive}`}>
@@ -174,6 +163,55 @@ export default function Profile() {
                         <div className={`${styles.fieldValue} ${styles.rankValue}`} style={{ color: '#22d3ee' }}>
                             {profile.free_products_count || 0} productos
                         </div>
+                    </div>
+                </div>
+
+                {/* Bank Information Card */}
+                <div className={`${styles.infoCard} ${styles.bankCard} glass`}>
+                    <div className={styles.iconContainer} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                        <Sparkles size={20} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className={styles.fieldLabel}>Datos de Cobro</span>
+                            {(!profile.bank_name || !profile.account_number) && !editingBank && (
+                                <button className={styles.editDataBtn} onClick={() => setEditingBank(true)}>Configurar</button>
+                            )}
+                        </div>
+
+                        {editingBank ? (
+                            <div className={styles.bankEditForm}>
+                                <input
+                                    type="text"
+                                    placeholder="Nombre del Banco"
+                                    className={styles.bankInput}
+                                    value={bankData.bank_name}
+                                    onChange={(e) => setBankData({ ...bankData, bank_name: e.target.value })}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Nro de Cuenta"
+                                    className={styles.bankInput}
+                                    value={bankData.account_number}
+                                    onChange={(e) => setBankData({ ...bankData, account_number: e.target.value })}
+                                />
+                                <div className={styles.bankActions}>
+                                    <button className={styles.bankSaveBtn} onClick={handleUpdateBank} disabled={saving}>
+                                        {saving ? '...' : 'Vincular'}
+                                    </button>
+                                    <button className={styles.bankCancelBtn} onClick={() => setEditingBank(false)}>X</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className={styles.bankDisplay}>
+                                <div className={styles.fieldValue}>
+                                    {profile.bank_name || 'No configurado'}
+                                </div>
+                                <div className={styles.accountSub}>
+                                    {profile.account_number ? `Cuenta: ${profile.account_number}` : 'Vincule su cuenta para recibir pagos'}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

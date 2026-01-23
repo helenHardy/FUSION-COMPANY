@@ -288,6 +288,46 @@
     margin-top: 10px;
 }
 
+.bankReferenceBox {
+    background: rgba(16, 185, 129, 0.05);
+    border: 1px solid rgba(16, 185, 129, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.bankReferenceHeader {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #10b981;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.bankReferenceContent {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bankRefLine {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.bankRefLine span {
+    color: var(--text-dim);
+}
+
+.bankRefLine strong {
+    color: var(--text-main);
+    font-weight: 700;
+}
+
 .fieldGroup {
     display: flex;
     flex-direction: column;

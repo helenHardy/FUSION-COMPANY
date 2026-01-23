@@ -18,7 +18,9 @@ export default function Register() {
         password: '',
         fullName: '',
         documentId: '',
-        comboId: ''
+        comboId: '',
+        bankName: '',
+        accountNumber: ''
     })
 
     // Create a temporary client with PERSISTENCE DISABLED to avoid warning and session conflicts
@@ -76,7 +78,9 @@ export default function Register() {
                         document_id: formData.documentId,
                         role: 'afiliado',
                         sponsor_id: profile.id,
-                        current_combo_id: formData.comboId
+                        current_combo_id: formData.comboId,
+                        bank_name: formData.bankName,
+                        account_number: formData.accountNumber
                     }
                 }
             })
@@ -165,6 +169,38 @@ export default function Register() {
                                 onChange={handleChange}
                                 required
                             />
+                        </div>
+                    </div>
+
+                    <div className={styles.row}>
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Banco (Opcional)</label>
+                            <div className={styles.inputWrapper}>
+                                <Sparkles className={styles.inputIcon} size={18} />
+                                <input
+                                    type="text"
+                                    name="bankName"
+                                    placeholder="Ej: Banco Unión"
+                                    className={`input ${styles.inputField}`}
+                                    value={formData.bankName}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label className={styles.label}>Nro de Cuenta (Opcional)</label>
+                            <div className={styles.inputWrapper}>
+                                <CreditCard className={styles.inputIcon} size={18} />
+                                <input
+                                    type="text"
+                                    name="accountNumber"
+                                    placeholder="12345678"
+                                    className={`input ${styles.inputField}`}
+                                    value={formData.accountNumber}
+                                    onChange={handleChange}
+                                />
+                            </div>
                         </div>
                     </div>
 

@@ -30,7 +30,7 @@ export default function PayoutManager() {
             setLoading(true)
             const { data: profiles } = await supabase
                 .from('profiles')
-                .select('id, full_name, total_earnings, current_rank')
+                .select('id, full_name, total_earnings, current_rank, bank_name, account_number')
                 .order('total_earnings', { ascending: false })
 
             const { data: payouts } = await supabase
@@ -187,7 +187,7 @@ export default function PayoutManager() {
 
             <div className={`${styles.tableCard} glass`}>
                 {activeTab === 'saldos' ? (
-                    <Table headers={['Socio / Consultor', 'Rango Actual', 'Ganancia Histórica', 'Saldo en Billetera', 'Operaciones']}>
+                    <Table headers={['Socio / Consultor', 'Rango Actual', 'Datos Bancarios', 'Ganancia Histórica', 'Saldo', 'Acciones']}>
                         {loading && users.length === 0 ? (
                             <tr>
                                 <td colSpan="5" style={{ textAlign: 'center', padding: '4rem' }}>
@@ -204,6 +204,12 @@ export default function PayoutManager() {
                                     <td className={styles.td}>
                                         <div className={styles.rankBadge}>
                                             {u.current_rank || 'Básico'}
+                                        </div>
+                                    </td>
+                                    <td className={styles.td}>
+                                        <div className={styles.bankInfo}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{u.bank_name || '---'}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{u.account_number || 'Cuenta no registrada'}</div>
                                         </div>
                                     </td>
                                     <td className={styles.td}>
@@ -301,6 +307,20 @@ export default function PayoutManager() {
                         />
                         <div className={styles.maxBalance}>
                             Billetera disponible: <span style={{ color: 'white', fontWeight: '800' }}>{formatCurrency(selectedUser?.available_balance)}</span>
+                        </div>
+                    </div>
+
+                    <div className={styles.bankReferenceBox}>
+                        <div className={styles.bankReferenceHeader}>
+                            <CreditCard size={16} /> Datos de Pago del Socio
+                        </div>
+                        <div className={styles.bankReferenceContent}>
+                            <div className={styles.bankRefLine}>
+                                <span>Banco:</span> <strong>{selectedUser?.bank_name || 'No especificado'}</strong>
+                            </div>
+                            <div className={styles.bankRefLine}>
+                                <span>Cuenta:</span> <strong>{selectedUser?.account_number || 'No especificada'}</strong>
+                            </div>
                         </div>
                     </div>
 

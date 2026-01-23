@@ -107,12 +107,14 @@ CREATE OR REPLACE FUNCTION public.approve_order(
 DECLARE
     v_user_id UUID;
     v_branch_id UUID;
-    v_total_pv INTEGER;
+    v_total_pv NUMERIC := 0; -- Inicializar en 0
     v_item RECORD;
     v_gift_count INTEGER := 0;
+    v_old_monthly_pv NUMERIC;
+    v_sponsor_id UUID;
 BEGIN
-    -- Obtener info de la venta
-    SELECT user_id, branch_id, total_pv INTO v_user_id, v_branch_id, v_total_pv
+    -- Obtener info básica de la venta
+    SELECT user_id, branch_id INTO v_user_id, v_branch_id
     FROM public.sales WHERE id = p_sale_id;
 
     -- Verificar si ya está completada
@@ -120,14 +122,18 @@ BEGIN
         RAISE EXCEPTION 'Este pedido ya ha sido aprobado anteriormente.';
     END IF;
 
-    -- 1. Descontar stock del inventario de la sucursal correspondiente
+    -- 1. Descontar stock del inventario y RECALCULAR PV TOTAL
     FOR v_item IN SELECT * FROM public.sale_items WHERE sale_id = p_sale_id LOOP
+        -- A. Descontar Stock
         UPDATE public.inventory 
         SET stock = stock - v_item.quantity
         WHERE branch_id = v_branch_id AND product_id = v_item.product_id;
         
-        -- Contar productos de regalo
-        IF v_item.is_gift THEN
+        -- B. Sumar PV (Solo si no es regalo)
+        IF NOT COALESCE(v_item.is_gift, FALSE) THEN
+            v_total_pv := v_total_pv + (COALESCE(v_item.pv_at_sale, 0) * v_item.quantity);
+        ELSE
+            -- Contar productos de regalo
             v_gift_count := v_gift_count + v_item.quantity;
         END IF;
     END LOOP;
@@ -135,19 +141,56 @@ BEGIN
     -- 2. Descontar del balance de regalos del usuario si aplica
     IF v_gift_count > 0 THEN
         UPDATE public.profiles 
-        SET free_products_count = free_products_count - v_gift_count
+        SET free_products_count = GREATEST(0, COALESCE(free_products_count, 0) - v_gift_count)
         WHERE id = v_user_id;
+
+        -- Compatibilidad con gift_balance si existe
+        BEGIN
+            UPDATE public.profiles 
+            SET gift_balance = GREATEST(0, COALESCE(gift_balance, 0) - v_gift_count)
+            WHERE id = v_user_id;
+        EXCEPTION WHEN OTHERS THEN NULL; END;
     END IF;
 
-    -- 3. Marcar como completada y asignar el aprobador
+    -- 3. Marcar como completada, asignar el aprobador y ACTUALIZAR PV TOTAL en la venta
     UPDATE public.sales 
     SET status = 'completado',
         seller_id = p_approver_id,
+        total_pv = v_total_pv, -- Guardamos el PV recalculado
         updated_at = NOW()
     WHERE id = p_sale_id;
 
-    -- Nota: Al marcar como completada, se deberían disparar los procesos
-    -- habituales de distribución de comisiones (si existen triggers previos).
+    -- 4. SUMAR PV AL USUARIO Y DISTRIBUIR COMISIONES (Sincronizado con process_sale)
+    IF v_total_pv > 0 AND v_user_id IS NOT NULL THEN
+        -- A. Actualizar PV Personal y Mensual
+        SELECT monthly_pv, sponsor_id INTO v_old_monthly_pv, v_sponsor_id 
+        FROM public.profiles WHERE id = v_user_id;
+
+        UPDATE public.profiles 
+        SET monthly_pv = COALESCE(monthly_pv, 0) + v_total_pv,
+            pv = COALESCE(pv, 0) + v_total_pv
+        WHERE id = v_user_id;
+
+        -- B. Verificar activación del patrocinador (umbral 100 PV)
+        IF COALESCE(v_old_monthly_pv, 0) < 100 AND (COALESCE(v_old_monthly_pv, 0) + v_total_pv) >= 100 AND v_sponsor_id IS NOT NULL THEN
+            UPDATE public.profiles 
+            SET active_directs_count = COALESCE(active_directs_count, 0) + 1 
+            WHERE id = v_sponsor_id;
+        END IF;
+
+        -- C. Escalar PVG en la red
+        PERFORM public.distribute_pvg(v_user_id, v_total_pv);
+
+        -- D. DISTRIBUIR REGALÍAS
+        PERFORM public.distribute_royalties(v_user_id, v_total_pv);
+
+        -- E. VERIFICAR ASCENSO DE RANGO
+        PERFORM public.check_rank_promotion(v_user_id);
+        
+        IF v_sponsor_id IS NOT NULL THEN
+            PERFORM public.check_rank_promotion(v_sponsor_id);
+        END IF;
+    END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

@@ -1,104 +1,113 @@
-.container {
-    max-width: 1000px;
-    margin: 0 auto;
-    animation: fadeIn 0.8s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.wrapper {
+    min-height: calc(100vh - 100px);
+    background: radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.1), transparent);
+    padding: 2rem;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
-    margin-bottom: 3rem;
-    text-align: left;
+    margin-bottom: 4rem;
+    text-align: center;
 }
 
 .title {
-    font-size: 2.8rem;
+    font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 900;
     margin: 0 0 0.5rem;
     font-family: 'Outfit', sans-serif;
-    letter-spacing: -1px;
+    letter-spacing: -1.5px;
     color: var(--text-main);
 }
 
 .highlight {
     background: var(--fusion-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     color: var(--text-muted);
     font-weight: 500;
 }
 
-/* Overview Card */
-.overviewCard {
+/* Tree Navigation Area */
+.viewPort {
+    flex: 1;
     display: flex;
+    justify-content: center;
+    padding-top: 2rem;
+    min-width: fit-content;
+}
+
+.treeRoot {
+    display: flex;
+    justify-content: center;
+}
+
+/* Recursive Branch Logic */
+.branch {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1.25rem;
-    padding: 1.5rem 2rem;
+    position: relative;
+    padding: 0 1rem;
+}
+
+/* Vertical Line from Parent */
+.branch:not(:first-child):not(:only-child)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 1.5rem;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nodeContainer {
+    position: relative;
+    z-index: 2;
     margin-bottom: 2.5rem;
 }
 
-.overviewIcon {
-    width: 54px;
-    height: 54px;
-    background: var(--primary-color);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+/* Connector Line down to Children */
+.nodeCardOpen .nodeContainer::after {
+    content: '';
+    position: absolute;
+    bottom: -2.5rem;
+    left: 50%;
+    width: 2px;
+    height: 2.5rem;
+    background: linear-gradient(to bottom, var(--primary-color), rgba(99, 102, 241, 0.4));
+    display: block;
+    z-index: 1;
 }
 
-.overviewTitle {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-main);
-}
-
-.overviewDesc {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-/* Tree Structure */
-.nodeWrapper {
-    margin-top: 1rem;
-    position: relative;
-    transition: all 0.3s ease;
-}
-
+/* Sophisticated Node Card */
 .nodeCard {
+    width: 240px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 1rem;
     display: flex;
     align-items: center;
-    padding: 1.25rem;
-    gap: 1.25rem;
+    gap: 12px;
     cursor: pointer;
-    background: var(--card-bg);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--border-color);
-    border-radius: 20px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .nodeCard:hover {
-    transform: translateX(8px);
-    background: var(--input-focus-bg);
+    transform: translateY(-5px);
     border-color: var(--primary-color);
-    box-shadow: var(--shadow-premium);
+    box-shadow: 0 15px 40px rgba(99, 102, 241, 0.2);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .nodeCardOpen {
@@ -106,130 +115,196 @@
     background: rgba(99, 102, 241, 0.05);
 }
 
-.chevronIcon {
-    color: var(--text-dim);
-    transition: transform 0.3s ease, color 0.3s ease;
+/* Connections styling when children are loaded */
+.nodeCardOpen+.childrenContainer {
+    display: flex;
 }
 
-.chevronIconOpen {
-    color: var(--primary-color);
-    transform: rotate(180deg);
+/* Vertical line from node to its children */
+.nodeCardOpen::after {
+    content: '';
+    position: absolute;
+    bottom: -2.5rem;
+    left: 50%;
+    width: 2px;
+    height: 2.5rem;
+    background: linear-gradient(to bottom, var(--primary-color), rgba(99, 102, 241, 0.4));
+    z-index: 1;
 }
 
-.avatarBox {
-    width: 60px;
-    height: 60px;
-    border-radius: 16px;
+.avatarContainer {
+    width: 48px;
+    height: 48px;
+    border-radius: clamp(12px, 3vw, 14px);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
     flex-shrink: 0;
     position: relative;
-    font-size: 1.5rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .avatarAdmin {
-    background: rgba(245, 158, 11, 0.1);
-    color: #f59e0b;
+    background: var(--fusion-gradient);
+    box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
 }
 
 .avatarUser {
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary-light);
 }
 
-.nodeContent {
+.rankBadge {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: #f59e0b;
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.nodeBody {
     flex: 1;
+    min-width: 0;
 }
 
 .nodeName {
     font-weight: 800;
     color: var(--text-main);
-    font-size: 1.1rem;
-    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
 }
 
-.nodeMeta {
+.nodeStats {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 6px;
-}
-
-.metaItem {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-}
-
-.metaValue {
-    color: var(--text-main);
-    font-weight: 700;
-}
-
-.statusIndicator {
-    font-size: 0.65rem;
-    padding: 6px 12px;
-    border-radius: 100px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.active {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.inactive {
-    background: rgba(239, 68, 68, 0.1);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-/* Connectors */
-.childrenBox {
-    border-left: 2px dashed var(--border-color);
-    margin-left: 30px;
-    padding-left: 1.5rem;
-    margin-top: 0.5rem;
-    animation: slideDown 0.4s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.emptyState {
-    padding: 1.25rem;
-    font-size: 0.9rem;
-    color: var(--text-dim);
-    font-style: italic;
-    display: flex;
-    align-items: center;
     gap: 8px;
 }
 
+.statLine {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-weight: 700;
+}
+
+.nodeToggle {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-dim);
+    transition: all 0.3s;
+}
+
+.nodeToggleOpen {
+    transform: rotate(180deg);
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Children Row */
+.childrenContainer {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding-top: 2rem;
+}
+
+/* Horizontal Connector Line from parent level */
+.childrenContainer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 1.25rem;
+    background: var(--primary-color);
+}
+
+/* Horizontal Bar connecting siblings */
+.branch:first-child:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 50%;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.branch:last-child:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 0;
+    right: 50%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.branch:not(:first-child):not(:last-child)::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Vertical line for each child to meet horizontal bar */
+.branch::after {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 50%;
+    width: 2px;
+    height: 0.75rem;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Leaf nodes (no children) */
+.leafEnd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    font-style: italic;
+    opacity: 0.5;
+}
+
+.leafLine {
+    width: 2px;
+    height: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    padding: 5rem;
+}
+
 .spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--border-color);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    color: var(--primary-color);
+    animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
@@ -238,36 +313,23 @@
     }
 }
 
-@media (max-width: 640px) {
-    .title {
-        font-size: 2rem;
-    }
+.nodeLoading {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
-    .nodeCard {
-        padding: 1rem;
-        gap: 0.75rem;
-    }
+.spinIcon {
+    animation: spin 1s linear infinite;
+    color: var(--primary-color);
+}
 
-    .avatarBox {
-        width: 48px;
-        height: 48px;
-        font-size: 1.2rem;
-    }
+/* Active/Inactive state on card border */
+.activeCard {
+    border-left: 4px solid #10b981 !important;
+}
 
-    .nodeName {
-        font-size: 1rem;
-    }
-
-    .metaItem {
-        font-size: 0.75rem;
-    }
-
-    .statusIndicator {
-        display: none;
-    }
-
-    .childrenBox {
-        margin-left: 24px;
-        padding-left: 1rem;
-    }
+.inactiveCard {
+    border-left: 4px solid #ef4444 !important;
 }
