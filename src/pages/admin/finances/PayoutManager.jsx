@@ -286,7 +286,7 @@ export default function PayoutManager() {
                     <div className={styles.emptyState}>
                         <Wallet size={64} className={styles.emptyIcon} />
                         <h3>{activeTab === 'saldos' ? 'Sin saldos pendientes' : 'Sin solicitudes pendientes'}</h3>
-                        <p>{activeTab === 'saldos' ? 'No se encontraron socios con balance disponible.' : 'No hay retiros esperando aprobación.'}</p>
+                        <p>{activeTab === 'saldos' ? 'No se encontraron socios con saldo disponible.' : 'No hay retiros esperando aprobación.'}</p>
                     </div>
                 )}
             </div>
@@ -306,7 +306,7 @@ export default function PayoutManager() {
                             autoFocus
                         />
                         <div className={styles.maxBalance}>
-                            Billetera disponible: <span style={{ color: 'white', fontWeight: '800' }}>{formatCurrency(selectedUser?.available_balance)}</span>
+                            Saldo Disponible: <span style={{ color: 'white', fontWeight: '800' }}>{formatCurrency(selectedUser?.available_balance)}</span>
                         </div>
                     </div>
 

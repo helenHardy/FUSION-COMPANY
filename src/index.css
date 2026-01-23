@@ -165,6 +165,11 @@ h5 {
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
 }
 
+.input option {
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+}
+
 /* Generic Card */
 .card {
   background: var(--card-bg);

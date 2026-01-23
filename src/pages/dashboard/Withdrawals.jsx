@@ -107,7 +107,7 @@ export default function Withdrawals() {
                             <div className={styles.walletIconBox}>
                                 <CreditCard size={28} />
                             </div>
-                            <span className={styles.balanceLabel}>Saldo Disponible</span>
+                            <span className={styles.balanceLabel}>Mis Ganancias</span>
                         </div>
                         <div className={styles.balanceAmount}>{formatCurrency(balanceInfo.available)}</div>
                         <button
@@ -213,7 +213,7 @@ export default function Withdrawals() {
                         <div className={styles.alertBox}>
                             <AlertCircle size={20} style={{ flexShrink: 0 }} />
                             <span>
-                                Tienes un saldo neto disponible de <b>{formatCurrency(balanceInfo.available)}</b>.
+                                Tienes un saldo disponible de <b>{formatCurrency(balanceInfo.available)}</b>.
                                 Las solicitudes se procesan en un máximo de 24-48 horas hábiles.
                             </span>
                         </div>
