@@ -222,17 +222,19 @@ export default function Layout() {
 
                 .brand-name {
                     color: var(--text-main);
-                    font-weight: 800;
-                    font-size: 1.2rem;
-                    letter-spacing: 1px;
+                    font-weight: 900;
+                    font-size: 1.1rem;
+                    letter-spacing: -0.5px;
                     font-family: 'Outfit', sans-serif;
+                    line-height: 1;
                 }
 
                 .brand-tag {
-                    font-size: 0.65rem;
+                    font-size: 0.6rem;
                     color: var(--primary-color);
-                    font-weight: 800;
-                    letter-spacing: 2px;
+                    font-weight: 900;
+                    letter-spacing: 1.5px;
+                    margin-top: -2px;
                 }
 
                 .sidebar-nav {
@@ -253,16 +255,16 @@ export default function Layout() {
                 .nav-item {
                     display: flex;
                     align-items: center;
-                    gap: 14px;
-                    padding: 0.75rem 1rem;
+                    gap: 12px;
+                    padding: 0.6rem 0.85rem;
                     color: var(--sidebar-text);
                     text-decoration: none;
                     border-radius: 12px;
-                    margin-bottom: 4px;
-                    transition: all 0.3s ease;
+                    margin-bottom: 2px;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
                     position: relative;
-                    font-weight: 500;
-                    font-size: 0.95rem;
+                    font-weight: 600;
+                    font-size: 0.9rem;
                 }
 
                 .nav-item:hover {
@@ -280,10 +282,10 @@ export default function Layout() {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    width: 32px;
-                    height: 32px;
+                    width: 28px;
+                    height: 28px;
                     border-radius: 8px;
-                    transition: all 0.3s ease;
+                    transition: all 0.25s ease;
                 }
 
                 .nav-item.active .icon-box {
@@ -342,7 +344,15 @@ export default function Layout() {
                 }
 
                 .header-left { display: flex; align-items: center; gap: 1rem; }
-                .page-title { margin: 0; font-size: 1.5rem; color: var(--text-main); }
+                .page-title { 
+                    margin: 0; 
+                    font-size: clamp(1.2rem, 4vw, 1.6rem); 
+                    color: var(--text-main); 
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 950;
+                    letter-spacing: -0.04em;
+                    line-height: 1;
+                }
 
                 .header-right { display: flex; align-items: center; gap: 1.5rem; }
 
@@ -436,11 +446,16 @@ export default function Layout() {
                     }
                     .sidebar-overlay.open { opacity: 1; visibility: visible; }
                     .main-wrapper { margin-left: 0; }
-                    .top-header { padding: 0 1.25rem; }
-                    .content-area { padding: 1.5rem; }
+                    .top-header { height: 60px; padding: 0 1rem; }
+                    .page-title { font-size: 1.3rem; }
+                    .sidebar-header { padding: 1.25rem 1rem; }
+                    .nav-section-title { padding: 0.75rem 0.85rem 0.4rem; }
+                    .icon-btn { width: 36px; height: 36px; }
+                    .user-avatar { width: 36px; height: 36px; font-size: 0.9rem; }
+                    .user-profile { padding-left: 1rem; gap: 8px; }
                     .mobile-only { display: flex; }
                     .pc-only { display: none; }
-                    .menu-toggle { background: none; border: none; color: var(--text-main); padding: 0; }
+                    .menu-toggle { background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 7px; border-radius: 10px; }
                 }
             `}</style>
         </div>
