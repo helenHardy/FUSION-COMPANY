@@ -67,7 +67,7 @@ export default function PublicRegister() {
                             <User size={40} color="white" />
                         </div>
                         <h1 className={styles.title}>Crear Cuenta</h1>
-                        <p className={styles.subtitle}>Únete a Fusion Company</p>
+                        <p className={styles.subtitle}>Únete a Fusion</p>
                     </div>
 
                     {error && (
@@ -158,7 +158,7 @@ export default function PublicRegister() {
                 </div>
 
                 <div className={styles.copyright}>
-                    © 2026 Fusion Company. Todos los derechos reservados.
+                    © 2026 Fusion. Todos los derechos reservados.
                 </div>
             </div>
         </div>

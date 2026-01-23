@@ -13,10 +13,10 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
             <div className={styles.ticketHeader}>
                 {/* <img src={logo} alt="Fusion Logo" style={{ width: '40px', height: '40px', marginBottom: '5px' }} /> */}
                 <div className={styles.ticketTitle}>COMPROBANTE VENTA</div>
-                {/* <div className={styles.ticketSubtitle}>FUSION COMPANY</div> */}
+                {/* <div className={styles.ticketSubtitle}>FUSION</div> */}
             </div>
 
-            <div className={styles.divider}>==========================</div>
+            <div className={styles.divider}>============================</div>
 
             {/* Meta Info */}
             <div className={styles.ticketMeta}>
@@ -36,7 +36,7 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
                     <span>ATENDIDO: {String(sellerName || 'SISTEMA').toUpperCase()}</span>
                 </div>
 
-                <div className={styles.dividerDashed}>--------------------------</div>
+                <div className={styles.dividerDashed}>----------------------------</div>
 
                 <div className={styles.metaRow}>
                     <span>CLI: {String(customer?.full_name || 'CLIENTE GENERAL').toUpperCase()}</span>
@@ -46,7 +46,7 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
                 </div>
             </div>
 
-            <div className={styles.divider}>==========================</div>
+            <div className={styles.divider}>============================</div>
 
             {/* Items Header */}
             <div className={styles.ticketItems}>
@@ -55,7 +55,7 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
                     <span style={{ width: '60%' }}>DETALLE</span>
                     <span style={{ width: '30%', textAlign: 'right' }}>SUBT.</span>
                 </div>
-                <div className={styles.dividerDashedSmall}>--------------------------</div>
+                <div className={styles.dividerDashedSmall}>----------------------------</div>
 
                 {/* Items List */}
                 {items.map((item, idx) => (
@@ -75,7 +75,7 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
                 ))}
             </div>
 
-            <div className={styles.divider}>==========================</div>
+            <div className={styles.divider}>============================</div>
 
             {/* Totals */}
             <div className={styles.totalsBox}>
@@ -89,7 +89,7 @@ export const Ticket = ({ saleData, branchName, sellerName }) => {
                 </div>
             </div>
 
-            <div className={styles.dividerDashed}>--------------------------</div>
+            <div className={styles.dividerDashed}>----------------------------</div>
 
             <div className={styles.fidelityBox}>
                 <span>PV ACUMULADOS: {totalPV.toFixed(2)}</span>

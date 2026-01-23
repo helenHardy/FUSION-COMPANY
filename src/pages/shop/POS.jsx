@@ -177,26 +177,27 @@ export default function POS() {
         const doc = iframe.contentWindow.document;
         const css = `
             @page { size: 58mm auto; margin: 0; }
-            body { margin: 0; padding: 0; width: 58mm; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 8.5pt; line-height: 1.2; }
-            #printable-ticket { width: 58mm; padding: 5mm 2mm; box-sizing: border-box; }
-            .ticketHeader { text-align: center; margin-bottom: 3mm; border-bottom: 0.5pt dashed black; padding-bottom: 2mm; }
-            .ticketTitle { font-size: 11pt; font-weight: 950; line-height: 1.1; margin: 0; }
-            .ticketSubtitle { font-size: 8.5pt; font-weight: 700; margin-top: 1mm; }
-            .divider { text-align: center; margin: 2mm 0; font-weight: 900; }
-            .ticketMeta { font-size: 8.5pt; margin-bottom: 2mm; }
-            .metaRow { display: flex; justify-content: space-between; margin-bottom: 0.8mm; line-height: 1; }
-            .ticketItems { width: 100%; margin: 3mm 0; }
-            .itemsHeader { display: flex; justify-content: space-between; font-weight: 900; border-bottom: 0.5pt solid black; padding-bottom: 0.5mm; margin-bottom: 1mm; }
-            .itemRowWrapper { margin-bottom: 2mm; padding-bottom: 1mm; border-bottom: 0.1pt solid #eee; }
-            .itemMainLine { display: flex; justify-content: space-between; }
-            .itemDetailLine { display: flex; gap: 3mm; font-size: 7.5pt; font-style: italic; }
-            .giftLabel { font-weight: 900; border: 0.5pt solid black; padding: 0 1mm; }
-            .totalsBox { border-top: 0.5pt solid black; padding-top: 1.5mm; margin-top: 1.5mm; }
-            .totalLine { display: flex; justify-content: space-between; margin-bottom: 0.8mm; }
-            .totalLineLarge { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 11pt; font-weight: 950; border-top: 1.5pt solid black; padding-top: 1.5mm; }
-            .fidelityBox { text-align: center; margin: 4mm 0; border: 0.5pt solid black; padding: 1.5mm; font-weight: 800; }
-            .ticketFooter { text-align: center; margin-top: 5mm; font-size: 8pt; line-height: 1.3; }
-            .thankYou { font-weight: 900; font-size: 9pt; margin-bottom: 1.5mm; }
+            body { margin: 0; padding: 0; width: 58mm; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 8pt; line-height: 1.2; overflow-x: hidden; }
+            #printable-ticket { width: 58mm; padding: 2mm 1mm; box-sizing: border-box; }
+            .ticketHeader { text-align: center; margin-bottom: 2mm; border-bottom: 0.5pt dashed black; padding-bottom: 1.5mm; }
+            .ticketTitle { font-size: 10pt; font-weight: 950; line-height: 1.1; margin: 0; }
+            .ticketSubtitle { font-size: 8pt; font-weight: 700; margin-top: 1mm; }
+            .divider { text-align: center; margin: 1.5mm 0; font-weight: 900; letter-spacing: -1px; }
+            .ticketMeta { font-size: 8pt; margin-bottom: 2mm; }
+            .metaRow { display: flex; justify-content: space-between; margin-bottom: 0.5mm; line-height: 1; }
+            .ticketItems { width: 100%; margin: 2mm 0; }
+            .itemsHeader { display: flex; justify-content: space-between; font-weight: 950; border-bottom: 0.5pt solid black; padding-bottom: 0.5mm; margin-bottom: 1mm; }
+            .itemRowWrapper { margin-bottom: 1.5mm; padding-bottom: 0.8mm; border-bottom: 0.1pt solid #ddd; }
+            .itemMainLine { display: flex; justify-content: space-between; font-weight: 700; }
+            .itemDetailLine { display: flex; gap: 2mm; font-size: 7pt; font-style: italic; margin-top: 0.2mm; }
+            .giftLabel { font-weight: 900; background: black; color: white; padding: 0 1mm; font-size: 7pt; }
+            .totalsBox { border-top: 0.5pt solid black; padding-top: 1mm; margin-top: 1mm; }
+            .totalLine { display: flex; justify-content: space-between; margin-bottom: 0.5mm; }
+            .totalLineLarge { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 10pt; font-weight: 950; border-top: 1pt solid black; padding-top: 1mm; }
+            .fidelityBox { text-align: center; margin: 3mm 0; border: 0.5pt solid black; padding: 1mm; font-weight: 800; font-size: 8.5pt; }
+            .ticketFooter { text-align: center; margin-top: 4mm; font-size: 7.5pt; line-height: 1.2; }
+            .thankYou { font-weight: 900; font-size: 8.5pt; margin-bottom: 1mm; }
+            .validez { font-size: 7pt; opacity: 0.8; }
         `;
         doc.open(); doc.write('<html><head><style>' + css + '</style></head><body>'); doc.write(ticketContent.innerHTML); doc.write('</body></html>'); doc.close();
         iframe.contentWindow.focus();

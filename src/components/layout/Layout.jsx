@@ -83,7 +83,6 @@ export default function Layout() {
                         </div>
                         <div className="brand-text">
                             <span className="brand-name">FUSION</span>
-                            <span className="brand-tag">COMPANY</span>
                         </div>
                         <button onClick={() => setSidebarOpen(false)} className="close-btn mobile-only">
                             <X size={24} />

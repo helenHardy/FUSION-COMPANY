@@ -142,7 +142,7 @@ export default function Login() {
                     </div> */}
 
                     <div className={styles.copyright}>
-                        © 2026 Fusion Company. Todos los derechos reservados.
+                        © 2026 Fusion. Todos los derechos reservados.
                     </div>
                 </div>
             </div>
