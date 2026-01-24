@@ -313,3 +313,13 @@
     transform: translateY(-3px);
     box-shadow: 0 15px 30px rgba(99, 102, 241, 0.4);
 }
+
+.hiddenPrintWrapper {
+    display: none;
+}
+
+@media print {
+    .hiddenPrintWrapper {
+        display: block;
+    }
+}

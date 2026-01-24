@@ -5,8 +5,9 @@ import { useAuth } from '../../../context/AuthContext'
 import Table from '../../../components/ui/Table'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
-import { CheckCircle, XCircle, Eye, ShoppingCart, User, MapPin, Package, Info, Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import { CheckCircle, XCircle, Eye, ShoppingCart, User, MapPin, Package, Info, Loader2, Sparkles, AlertCircle, Printer } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../../lib/utils'
+import { Ticket } from '../../shop/Ticket'
 import styles from './OrderApproval.module.css'
 
 export default function OrderApproval() {
@@ -16,6 +17,7 @@ export default function OrderApproval() {
     const [approving, setApproving] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [orderDetails, setOrderDetails] = useState([])
+    const [printingOrder, setPrintingOrder] = useState(null)
 
     useEffect(() => {
         fetchOrders()
@@ -105,6 +107,55 @@ export default function OrderApproval() {
         }
     }
 
+    const handlePrint = async (order) => {
+        try {
+            // Need to fetch details if not already loaded
+            let items = []
+            if (selectedOrder && selectedOrder.id === order.id && orderDetails.length > 0) {
+                items = orderDetails
+            } else {
+                const { data, error } = await supabase
+                    .from('sale_items')
+                    .select('*, products(name)')
+                    .eq('sale_id', order.id)
+                if (error) throw error
+                items = data
+            }
+
+            // Format for Ticket
+            const saleData = {
+                items: items.map(i => ({
+                    quantity: i.quantity,
+                    name: i.products?.name,
+                    price: i.price_at_sale,
+                    isGift: i.price_at_sale === 0
+                })),
+                total: order.total_amount,
+                totalPV: order.total_pv,
+                date: order.created_at,
+                customer: {
+                    full_name: order.profiles?.full_name,
+                    document_id: order.profiles?.document_id
+                }
+            }
+
+            setPrintingOrder({
+                saleData,
+                branchName: order.sucursales?.name || 'CENTRAL',
+                sellerName: 'ADMIN'
+            })
+
+            setTimeout(() => {
+                window.print()
+                // setPrintingOrder(null) // Optional: Keep it or clear it. Clearing might remove it from DOM too fast if not handling print events.
+            }, 500)
+
+        } catch (err) {
+            console.error("Error al imprimir:", err)
+            alert("Error al obtener detalles para impresión")
+        }
+    }
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -156,6 +207,9 @@ export default function OrderApproval() {
                                 <div className={styles.actions}>
                                     <button onClick={() => handleViewDetails(order)} className={styles.viewBtn}>
                                         <Eye size={16} />
+                                    </button>
+                                    <button onClick={() => handlePrint(order)} className={styles.viewBtn} style={{ background: '#f59e0b', color: 'white' }} title="Imprimir Ticket">
+                                        <Printer size={16} />
                                     </button>
                                     <button onClick={() => handleApprove(order.id)} className={styles.approveBtn}>
                                         <CheckCircle size={16} />
@@ -242,6 +296,19 @@ export default function OrderApproval() {
                     </div>
                 )}
             </Modal>
+
+            {/* Hidden Ticket for Printing */}
+            <div className={styles.hiddenPrintWrapper}>
+                <div className={styles.printArea}>
+                    {printingOrder && (
+                        <Ticket
+                            saleData={printingOrder.saleData}
+                            branchName={printingOrder.branchName}
+                            sellerName={printingOrder.sellerName}
+                        />
+                    )}
+                </div>
+            </div>
         </div>
     )
 }

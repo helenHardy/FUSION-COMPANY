@@ -16,6 +16,18 @@ export default function Withdrawals() {
     const [method, setMethod] = useState('Transferencia')
     const [submitting, setSubmitting] = useState(false)
 
+    // Bank info state
+    const [bankInfo, setBankInfo] = useState({ bank_name: '', account_number: '' })
+
+    useEffect(() => {
+        if (profile) {
+            setBankInfo({
+                bank_name: profile.bank_name || '',
+                account_number: profile.account_number || ''
+            })
+        }
+    }, [profile])
+
     useEffect(() => {
         if (profile?.id) {
             fetchData()
@@ -66,8 +78,28 @@ export default function Withdrawals() {
             return
         }
 
+        if (method === 'Transferencia') {
+            if (!bankInfo.bank_name.trim() || !bankInfo.account_number.trim()) {
+                alert("Para transferencias, por favor completa los datos bancarios.")
+                return
+            }
+        }
+
         setSubmitting(true)
         try {
+            // Update profile bank info if changed and method is Transferencia
+            if (method === 'Transferencia' && (bankInfo.bank_name !== profile.bank_name || bankInfo.account_number !== profile.account_number)) {
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                        bank_name: bankInfo.bank_name,
+                        account_number: bankInfo.account_number
+                    })
+                    .eq('id', profile.id)
+
+                if (updateError) throw updateError
+            }
+
             const { error } = await supabase.rpc('request_payout', {
                 p_amount: parseFloat(withdrawAmount),
                 p_method: method,
@@ -246,6 +278,31 @@ export default function Withdrawals() {
                                 <option value="USDT">Billetera USDT (TRC20)</option>
                             </select>
                         </div>
+
+                        {method === 'Transferencia' && (
+                            <>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Banco</label>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={bankInfo.bank_name}
+                                        onChange={(e) => setBankInfo({ ...bankInfo, bank_name: e.target.value })}
+                                        placeholder="Nombre del Banco"
+                                    />
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Número de Cuenta</label>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={bankInfo.account_number}
+                                        onChange={(e) => setBankInfo({ ...bankInfo, account_number: e.target.value })}
+                                        placeholder="Número de Cuenta"
+                                    />
+                                </div>
+                            </>
+                        )}
 
                         <button
                             className={`button ${styles.submitButton}`}

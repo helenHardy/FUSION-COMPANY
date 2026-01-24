@@ -30,7 +30,7 @@ export default function PayoutManager() {
             setLoading(true)
             const { data: profiles } = await supabase
                 .from('profiles')
-                .select('id, full_name, total_earnings, current_rank, bank_name, account_number')
+                .select('id, full_name, total_earnings, current_rank, bank_name, account_number, document_id')
                 .order('total_earnings', { ascending: false })
 
             const { data: payouts } = await supabase
@@ -62,7 +62,7 @@ export default function PayoutManager() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('payouts')
-                .select('*, profiles!user_id(full_name)')
+                .select('*, profiles!user_id(full_name, bank_name, account_number, document_id)')
                 .eq('status', 'pendiente')
                 .order('created_at', { ascending: true })
 
@@ -141,8 +141,13 @@ export default function PayoutManager() {
     }
 
     const filteredUsers = users.filter(u =>
-        u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        (u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || u.document_id?.includes(searchQuery)) &&
         (u.total_earnings > 0 || u.available_balance > 0)
+    )
+
+    const filteredRequests = requests.filter(req =>
+        req.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        req.profiles?.document_id?.includes(searchQuery)
     )
 
     return (
@@ -187,7 +192,7 @@ export default function PayoutManager() {
 
             <div className={`${styles.tableCard} glass`}>
                 {activeTab === 'saldos' ? (
-                    <Table headers={['Socio / Consultor', 'Rango Actual', 'Datos Bancarios', 'Ganancia Histórica', 'Saldo', 'Acciones']}>
+                    <Table headers={['Socio / Consultor', 'Doc. Identidad', 'Rango Actual', 'Datos Bancarios', 'Ganancia Histórica', 'Saldo', 'Acciones']}>
                         {loading && users.length === 0 ? (
                             <tr>
                                 <td colSpan="5" style={{ textAlign: 'center', padding: '4rem' }}>
@@ -200,6 +205,9 @@ export default function PayoutManager() {
                                     <td className={styles.td}>
                                         <div className={styles.userName}>{u.full_name}</div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>ID: {u.id.substring(0, 8)}</div>
+                                    </td>
+                                    <td className={styles.td}>
+                                        <div style={{ fontWeight: 600 }}>{u.document_id || '---'}</div>
                                     </td>
                                     <td className={styles.td}>
                                         <div className={styles.rankBadge}>
@@ -236,15 +244,15 @@ export default function PayoutManager() {
                         )}
                     </Table>
                 ) : (
-                    <Table headers={['Fecha', 'Socio', 'Monto', 'Método', 'Acciones']}>
-                        {loading && requests.length === 0 ? (
+                    <Table headers={['Fecha', 'Socio', 'Doc. Identidad', 'Monto', 'Método', 'Datos Bancarios', 'Acciones']}>
+                        {loading && filteredRequests.length === 0 ? (
                             <tr>
-                                <td colSpan="5" style={{ textAlign: 'center', padding: '4rem' }}>
+                                <td colSpan="7" style={{ textAlign: 'center', padding: '4rem' }}>
                                     <Loader2 className="spinner" size={40} />
                                 </td>
                             </tr>
                         ) : (
-                            requests.map(req => (
+                            filteredRequests.map(req => (
                                 <tr key={req.id} className={styles.tr}>
                                     <td className={styles.td}>
                                         <div style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>{formatDate(req.created_at)}</div>
@@ -253,10 +261,19 @@ export default function PayoutManager() {
                                         <div className={styles.userName}>{req.profiles?.full_name}</div>
                                     </td>
                                     <td className={styles.td}>
+                                        <div style={{ fontWeight: 600 }}>{req.profiles?.document_id || '---'}</div>
+                                    </td>
+                                    <td className={styles.td}>
                                         <div className={styles.amountText}>{formatCurrency(req.amount)}</div>
                                     </td>
                                     <td className={styles.td}>
                                         <div className={styles.methodBadge}>{req.payment_method}</div>
+                                    </td>
+                                    <td className={styles.td}>
+                                        <div className={styles.bankInfo}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{req.profiles?.bank_name || '---'}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>{req.profiles?.account_number || '---'}</div>
+                                        </div>
                                     </td>
                                     <td className={styles.td}>
                                         <div className={styles.actionGroup}>
@@ -282,7 +299,7 @@ export default function PayoutManager() {
                     </Table>
                 )}
 
-                {!loading && (activeTab === 'saldos' ? filteredUsers.length === 0 : requests.length === 0) && (
+                {!loading && (activeTab === 'saldos' ? filteredUsers.length === 0 : filteredRequests.length === 0) && (
                     <div className={styles.emptyState}>
                         <Wallet size={64} className={styles.emptyIcon} />
                         <h3>{activeTab === 'saldos' ? 'Sin saldos pendientes' : 'Sin solicitudes pendientes'}</h3>

@@ -4,7 +4,8 @@ import { supabase } from '../../../lib/supabase'
 import Table from '../../../components/ui/Table'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
-import { Plus, Edit2, Trash2, MapPin, Building2, Loader2, User } from 'lucide-react'
+import { Plus, Edit2, Trash2, MapPin, Building2, Loader2, User, FileText, Calendar, DollarSign, Package } from 'lucide-react'
+import { formatCurrency, formatDate } from '../../../lib/utils'
 import styles from './BranchList.module.css'
 
 export default function BranchList() {
@@ -15,6 +16,19 @@ export default function BranchList() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [formData, setFormData] = useState({ name: '', address: '', status: 'activo', manager_id: '' })
     const [editingId, setEditingId] = useState(null)
+
+    // Report State
+    const [reportModalOpen, setReportModalOpen] = useState(false)
+    const [selectedBranchReport, setSelectedBranchReport] = useState(null)
+    const [branchSales, setBranchSales] = useState([])
+    const [reportLoading, setReportLoading] = useState(false)
+    const [stats, setStats] = useState({ totalAmount: 0, totalPV: 0, count: 0 })
+
+    // Filter State
+    const [filterType, setFilterType] = useState('month') // 'day', 'month', 'year'
+    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
+    const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7))
+    const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString())
 
     useEffect(() => {
         fetchData()
@@ -125,6 +139,72 @@ export default function BranchList() {
         }
     }
 
+    const handleOpenReport = async (branch) => {
+        setSelectedBranchReport(branch)
+        setReportModalOpen(true)
+        // fetchBranchReport(branch.id) // This will be called by the useEffect now
+    }
+
+    const fetchBranchReport = async (branchId) => {
+        setReportLoading(true)
+        try {
+            let query = supabase
+                .from('sales')
+                .select('*, profiles(full_name)')
+                .eq('branch_id', branchId)
+                .eq('status', 'completado')
+
+            // Date Filtering Logic
+            let startDate, endDate
+            const now = new Date()
+
+            if (filterType === 'day') {
+                startDate = filterDate
+                endDate = filterDate + ' 23:59:59'
+                query = query.gte('created_at', startDate).lte('created_at', endDate)
+            } else if (filterType === 'month') {
+                const [y, m] = filterMonth.split('-')
+                startDate = `${y}-${m}-01`
+                const lastDay = new Date(y, m, 0).getDate()
+                endDate = `${y}-${m}-${lastDay} 23:59:59`
+                query = query.gte('created_at', startDate).lte('created_at', endDate)
+            } else if (filterType === 'year') {
+                startDate = `${filterYear}-01-01`
+                endDate = `${filterYear}-12-31 23:59:59`
+                query = query.gte('created_at', startDate).lte('created_at', endDate)
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: false }).limit(100)
+
+            if (error) throw error
+
+            const sales = data || []
+            setBranchSales(sales)
+
+            // Calculate totals
+            const totalAmount = sales.reduce((sum, sale) => sum + parseFloat(sale.total_amount), 0)
+            const totalPV = sales.reduce((sum, sale) => sum + parseFloat(sale.total_pv || 0), 0)
+
+            setStats({
+                totalAmount,
+                totalPV,
+                count: sales.length
+            })
+
+        } catch (err) {
+            console.error("Error fetching report:", err)
+        } finally {
+            setReportLoading(false)
+        }
+    }
+
+    // Effect to refetch when filters change
+    useEffect(() => {
+        if (reportModalOpen && selectedBranchReport) {
+            fetchBranchReport(selectedBranchReport.id)
+        }
+    }, [filterType, filterDate, filterMonth, filterYear, reportModalOpen, selectedBranchReport])
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -178,6 +258,14 @@ export default function BranchList() {
                             </td>
                             <td className={styles.td}>
                                 <div className={styles.actions}>
+                                    <button
+                                        onClick={() => handleOpenReport(branch)}
+                                        className={styles.editButton}
+                                        style={{ color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.2)' }}
+                                        title="Ver Reporte de Ventas"
+                                    >
+                                        <FileText size={16} />
+                                    </button>
                                     <button
                                         onClick={() => handleEdit(branch)}
                                         className={styles.editButton}
@@ -266,6 +354,137 @@ export default function BranchList() {
                         )}
                     </button>
                 </form>
+            </Modal>
+            <Modal
+                isOpen={reportModalOpen}
+                onClose={() => setReportModalOpen(false)}
+                title={`Reporte: ${selectedBranchReport?.name}`}
+                width="95%"
+                maxWidth="1200px"
+            >
+                <div className={styles.reportContainer}>
+                    {/* Filter Bar */}
+                    <div className={styles.filterBar}>
+                        <div className={styles.filterGroup}>
+                            <button
+                                className={`${styles.filterBtn} ${filterType === 'day' ? styles.activeFilter : ''}`}
+                                onClick={() => setFilterType('day')}
+                            >
+                                Día
+                            </button>
+                            <button
+                                className={`${styles.filterBtn} ${filterType === 'month' ? styles.activeFilter : ''}`}
+                                onClick={() => setFilterType('month')}
+                            >
+                                Mes
+                            </button>
+                            <button
+                                className={`${styles.filterBtn} ${filterType === 'year' ? styles.activeFilter : ''}`}
+                                onClick={() => setFilterType('year')}
+                            >
+                                Año
+                            </button>
+                        </div>
+
+                        <div className={styles.dateInputs}>
+                            {filterType === 'day' && (
+                                <input
+                                    type="date"
+                                    className={styles.dateInput}
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                />
+                            )}
+                            {filterType === 'month' && (
+                                <input
+                                    type="month"
+                                    className={styles.dateInput}
+                                    value={filterMonth}
+                                    onChange={(e) => setFilterMonth(e.target.value)}
+                                />
+                            )}
+                            {filterType === 'year' && (
+                                <select
+                                    className={styles.dateInput}
+                                    value={filterYear}
+                                    onChange={(e) => setFilterYear(e.target.value)}
+                                >
+                                    {[2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+                    </div>
+                    {/* Stats Cards */}
+                    <div className={styles.statsGrid}>
+                        <div className={styles.statCard}>
+                            <div className={styles.statIcon} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                                <DollarSign size={24} />
+                            </div>
+                            <div>
+                                <div className={styles.statLabel}>Ventas Totales</div>
+                                <div className={styles.statValue}>{formatCurrency(stats.totalAmount)}</div>
+                            </div>
+                        </div>
+                        <div className={styles.statCard}>
+                            <div className={styles.statIcon} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>
+                                <Package size={24} />
+                            </div>
+                            <div>
+                                <div className={styles.statLabel}>Volumen (PV)</div>
+                                <div className={styles.statValue}>{stats.totalPV.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div className={styles.statCard}>
+                            <div className={styles.statIcon} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                                <FileText size={24} />
+                            </div>
+                            <div>
+                                <div className={styles.statLabel}>Transacciones</div>
+                                <div className={styles.statValue}>{stats.count}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 className={styles.sectionTitle} style={{ marginTop: '2rem' }}>Últimas Ventas</h3>
+                    <div className={styles.salesTableContainer}>
+                        <table className={styles.salesTable}>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Cliente / Socio</th>
+                                    <th>Monto</th>
+                                    <th>PV</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {reportLoading ? (
+                                    <tr>
+                                        <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                                            <Loader2 className="spinner" size={24} />
+                                        </td>
+                                    </tr>
+                                ) : branchSales.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>
+                                            No hay ventas registradas
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    branchSales.map(sale => (
+                                        <tr key={sale.id}>
+                                            <td>{formatDate(sale.created_at)}</td>
+                                            <td>{sale.profiles?.full_name || 'Cliente General'}</td>
+                                            <td style={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(sale.total_amount)}</td>
+                                            <td style={{ fontWeight: 700, color: '#38bdf8' }}>{sale.total_pv}</td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </Modal>
         </div>
     )

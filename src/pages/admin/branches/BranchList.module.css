@@ -191,3 +191,161 @@
         justify-content: center;
     }
 }
+
+/* Report Modal Styles */
+.reportContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.statCard {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.statIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.statLabel {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-weight: 700;
+}
+
+.statValue {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+    line-height: 1.1;
+}
+
+.sectionTitle {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+}
+
+.salesTableContainer {
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.salesTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.salesTable th {
+    position: sticky;
+    top: 0;
+    background: var(--input-bg);
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 800;
+    z-index: 10;
+}
+
+.salesTable td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.salesTable tr:last-child td {
+    border-bottom: none;
+}
+
+/* Filter Styles */
+.filterBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--input-bg);
+    padding: 1rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filterGroup {
+    display: flex;
+    background: var(--bg-secondary);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.filterBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.activeFilter {
+    background: var(--fusion-gradient);
+    color: white;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+
+.dateInputs {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dateInput {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 10px;
+    color: var(--text-main);
+    font-family: inherit;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .filterBar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filterGroup {
+        justify-content: center;
+    }
+
+    .dateInput {
+        width: 100%;
+    }
+}
