@@ -56,6 +56,8 @@ BEGIN
     
     IF v_current_status = 'activo' THEN
         v_new_status := 'inactivo';
+    ELSIF v_current_status = 'pendiente' THEN
+        RAISE EXCEPTION 'No puedes activar usuarios pendientes desde aquí. Usa el módulo de ACTIVACIONES para asegurar el reparto de puntos.';
     ELSE
         v_new_status := 'activo';
     END IF;

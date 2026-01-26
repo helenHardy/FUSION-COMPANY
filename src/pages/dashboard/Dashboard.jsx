@@ -14,15 +14,55 @@ export default function Dashboard() {
     const { profile } = useAuth()
     const [rankReq, setRankReq] = useState(null)
     const [activationPlan, setActivationPlan] = useState(null)
+    const [cashierStats, setCashierStats] = useState({ todayVentas: 0, pendingOrders: 0, monthVentas: 0 })
+    const [loading, setLoading] = useState(false)
+
+    const isCashier = profile?.role === 'cajero'
 
     useEffect(() => {
-        if (profile?.current_rank) {
+        if (profile?.current_rank && !isCashier) {
             fetchRankReq()
         }
-        if (profile?.current_combo_id) {
+        if (profile?.current_combo_id && !isCashier) {
             fetchActivationPlan()
         }
+        if (isCashier) {
+            fetchCashierStats()
+        }
     }, [profile])
+
+    const fetchCashierStats = async () => {
+        setLoading(true)
+        try {
+            // Obtener sucursal asignada
+            const { data: branch } = await supabase
+                .from('sucursales')
+                .select('id')
+                .eq('manager_id', profile.id)
+                .maybeSingle()
+
+            if (!branch) return
+
+            const today = new Date().toISOString().split('T')[0]
+            const firstDayMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+
+            const [todaySales, monthSales, pending] = await Promise.all([
+                supabase.from('sales').select('total_amount').eq('branch_id', branch.id).eq('status', 'completado').gte('created_at', today),
+                supabase.from('sales').select('total_amount').eq('branch_id', branch.id).eq('status', 'completado').gte('created_at', firstDayMonth),
+                supabase.from('sales').select('id', { count: 'exact' }).eq('branch_id', branch.id).eq('status', 'pendiente')
+            ])
+
+            setCashierStats({
+                todayVentas: todaySales.data?.reduce((sum, s) => sum + parseFloat(s.total_amount), 0) || 0,
+                monthVentas: monthSales.data?.reduce((sum, s) => sum + parseFloat(s.total_amount), 0) || 0,
+                pendingOrders: pending.count || 0
+            })
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const fetchActivationPlan = async () => {
         try {
@@ -67,21 +107,69 @@ export default function Dashboard() {
 
     if (!profile) return null;
 
+    if (isCashier) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.hero}>
+                    <div className={styles.heroContent}>
+                        <h1 className={styles.heroTitle}>Operación de Caja: {profile?.full_name?.split(' ')[0]}</h1>
+                        <p className={styles.heroSubtitle}>Gestiona las ventas y pedidos de tu sucursal con eficiencia.</p>
+                    </div>
+                </div>
+
+                <div className={styles.statsGrid}>
+                    <div className={`${styles.statCard} glass`}>
+                        <div className={styles.iconBox} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                            <TrendingUp size={28} />
+                        </div>
+                        <div>
+                            <div className={styles.statLabel}>Ventas de Hoy</div>
+                            <div className={styles.statValue}>{formatCurrency(cashierStats.todayVentas)}</div>
+                        </div>
+                    </div>
+
+                    <div className={`${styles.statCard} glass`}>
+                        <div className={styles.iconBox} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                            <Activity size={28} />
+                        </div>
+                        <div>
+                            <div className={styles.statLabel}>Pedidos Pendientes</div>
+                            <div className={styles.statValue}>{cashierStats.pendingOrders}</div>
+                        </div>
+                    </div>
+
+                    <div className={`${styles.statCard} glass`}>
+                        <div className={styles.iconBox} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8' }}>
+                            <DollarSign size={28} />
+                        </div>
+                        <div>
+                            <div className={styles.statLabel}>Ventas del Mes</div>
+                            <div className={styles.statValue}>{formatCurrency(cashierStats.monthVentas)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className={styles.bottomGrid} style={{ gridTemplateColumns: '1fr' }}>
+                    <div className={`${styles.planCard} glass`} style={{ textAlign: 'center' }}>
+                        <div className={styles.planHeader} style={{ justifyContent: 'center', border: 'none' }}>
+                            <div className={styles.planIcon}><CheckCircle2 size={32} /></div>
+                            <div>
+                                <h4 className={styles.planTitle}>Terminal Operativa Activa</h4>
+                                <p style={{ color: 'var(--text-dim)' }}>Tenés acceso completo a las funciones de venta y despacho.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className={styles.container}>
             {/* Hero Section */}
             <div className={styles.hero}>
                 <div className={styles.heroContent}>
-                    {/* <div className={styles.heroTag}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Sparkles size={14} />
-                            Comando Fusion v2.0
-                        </span>
-                    </div> */}
                     <h1 className={styles.heroTitle}>Bienvenido, {profile?.full_name?.split(' ')[0]}</h1>
-                    {/* <p className={styles.heroSubtitle}>
-                        Gestiona tu red y monitorea tus ganancias en tiempo real con nuestra tecnología de sincronización avanzada.
-                    </p> */}
                 </div>
                 <div className={styles.heroDecor} />
             </div>
@@ -133,7 +221,7 @@ export default function Dashboard() {
                         <PiggyBank size={28} />
                     </div>
                     <div>
-                        <div className={styles.statLabel}>Bono Lealtad (Cochinito)</div>
+                        <div className={styles.statLabel}>Bono Lealtad</div>
                         <div className={styles.statValue}>{formatCurrency(profile?.loyalty_balance || 0)}</div>
                     </div>
                 </div>

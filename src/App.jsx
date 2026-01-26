@@ -30,8 +30,22 @@ import RewardsManager from './pages/admin/finances/RewardsManager'
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth()
-  if (loading) return <div>Loading...</div>
+  if (loading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+      <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
   if (!user) return <Navigate to="/login" />
+  return children
+}
+
+const RoleGuard = ({ children, allowedRoles }) => {
+  const { profile, loading } = useAuth()
+  if (loading) return null
+  if (!profile || !allowedRoles.includes(profile.role)) {
+    return <Navigate to="/" replace />
+  }
   return children
 }
 
@@ -57,20 +71,20 @@ function App() {
             <Route path="career" element={<CareerPath />} />
             <Route path="shop" element={<POS />} />
             <Route path="register-affiliate" element={<Register />} />
-            <Route path="admin/users" element={<UserList />} />
-            <Route path="admin/network/:userId" element={<AdminNetworkTree />} />
-            <Route path="admin/pending-activations" element={<PendingActivations />} />
-            <Route path="admin/branches" element={<BranchList />} />
-            <Route path="admin/products" element={<ProductList />} />
-            <Route path="admin/inventory" element={<InventoryList />} />
-            <Route path="admin/ranks" element={<RanksConfig />} />
-            <Route path="admin/liquidations" element={<LiquidationManager />} />
-            <Route path="admin/payouts" element={<PayoutManager />} />
-            <Route path="admin/combos" element={<CombosList />} />
-            <Route path="admin/royalties" element={<RoyaltiesConfig />} />
-            <Route path="admin/reports" element={<AdminSales />} />
-            <Route path="admin/order-approval" element={<OrderApproval />} />
-            <Route path="admin/rewards" element={<RewardsManager />} />
+            <Route path="admin/users" element={<RoleGuard allowedRoles={['admin']}><UserList /></RoleGuard>} />
+            <Route path="admin/network/:userId" element={<RoleGuard allowedRoles={['admin']}><AdminNetworkTree /></RoleGuard>} />
+            <Route path="admin/pending-activations" element={<RoleGuard allowedRoles={['admin']}><PendingActivations /></RoleGuard>} />
+            <Route path="admin/branches" element={<RoleGuard allowedRoles={['admin']}><BranchList /></RoleGuard>} />
+            <Route path="admin/products" element={<RoleGuard allowedRoles={['admin']}><ProductList /></RoleGuard>} />
+            <Route path="admin/inventory" element={<RoleGuard allowedRoles={['admin']}><InventoryList /></RoleGuard>} />
+            <Route path="admin/ranks" element={<RoleGuard allowedRoles={['admin']}><RanksConfig /></RoleGuard>} />
+            <Route path="admin/liquidations" element={<RoleGuard allowedRoles={['admin']}><LiquidationManager /></RoleGuard>} />
+            <Route path="admin/payouts" element={<RoleGuard allowedRoles={['admin']}><PayoutManager /></RoleGuard>} />
+            <Route path="admin/combos" element={<RoleGuard allowedRoles={['admin']}><CombosList /></RoleGuard>} />
+            <Route path="admin/royalties" element={<RoleGuard allowedRoles={['admin']}><RoyaltiesConfig /></RoleGuard>} />
+            <Route path="admin/reports" element={<RoleGuard allowedRoles={['admin', 'sucursal', 'cajero']}><AdminSales /></RoleGuard>} />
+            <Route path="admin/order-approval" element={<RoleGuard allowedRoles={['admin', 'sucursal', 'cajero']}><OrderApproval /></RoleGuard>} />
+            <Route path="admin/rewards" element={<RoleGuard allowedRoles={['admin']}><RewardsManager /></RoleGuard>} />
           </Route>
         </Routes>
       </AuthProvider>

@@ -25,20 +25,20 @@ export default function Layout() {
 
     const menuItems = [
         { path: '/', label: 'Escritorio', icon: <LayoutDashboard size={20} /> },
-        { path: '/network', label: 'Mi Red', icon: <GitBranch size={20} /> },
-        { path: '/earnings', label: 'Mis Ganancias', icon: <DollarSign size={20} /> },
-        { path: '/royalties', label: 'Bonos Regalías', icon: <BadgeDollarSign size={20} /> },
-        { path: '/withdrawals', label: 'Retiros', icon: <Wallet size={20} /> },
-        { path: '/career', label: 'Carrera Pro', icon: <Trophy size={20} /> },
+        { path: '/network', label: 'Mi Red', icon: <GitBranch size={20} />, roles: ['admin', 'afiliado', 'sucursal'] },
+        { path: '/earnings', label: 'Mis Ganancias', icon: <DollarSign size={20} />, roles: ['admin', 'afiliado', 'sucursal'] },
+        { path: '/royalties', label: 'Bonos Regalías', icon: <BadgeDollarSign size={20} />, roles: ['admin', 'afiliado', 'sucursal'] },
+        { path: '/withdrawals', label: 'Retiros', icon: <Wallet size={20} />, roles: ['admin', 'afiliado', 'sucursal'] },
+        { path: '/career', label: 'Carrera Pro', icon: <Trophy size={20} />, roles: ['admin', 'afiliado', 'sucursal'] },
         { path: '/shop', label: 'Tienda', icon: <ShoppingBag size={20} /> },
         { path: '/profile', label: 'Mi Perfil', icon: <User size={20} /> },
-        { path: '/register-affiliate', label: 'Registrar Afiliado', icon: <Users size={20} /> },
-    ]
+        { path: '/register-affiliate', label: 'Registrar Afiliado', icon: <Users size={20} />, roles: ['admin', 'afiliado', 'sucursal'] },
+    ].filter(item => !item.roles || item.roles.includes(profile?.role))
 
     const adminItems = [
         { path: '/admin/users', label: 'Usuarios', icon: <Users size={20} /> },
         { path: '/admin/pending-activations', label: 'Activaciones', icon: <UserCheck size={20} /> },
-        { path: '/admin/branches', label: 'Store', icon: <Store size={20} /> },
+        { path: '/admin/branches', label: 'Sucursales', icon: <Store size={20} /> },
         { path: '/admin/products', label: 'Productos', icon: <Package size={20} /> },
         { path: '/admin/combos', label: 'Combos', icon: <ShoppingBag size={20} /> },
         { path: '/admin/inventory', label: 'Inventario', icon: <Boxes size={20} /> },
@@ -96,15 +96,15 @@ export default function Layout() {
                         <NavItem key={item.path} item={item} onClick={() => setSidebarOpen(false)} />
                     ))}
 
-                    {(profile?.role === 'admin' || profile?.role === 'sucursal') && (
+                    {(profile?.role === 'admin' || profile?.role === 'sucursal' || profile?.role === 'cajero') && (
                         <>
                             <div className="nav-section-title admin">
-                                {profile?.role === 'admin' ? 'Administración' : 'Gestión Sucursal'}
+                                {profile?.role === 'admin' ? 'Administración' : profile?.role === 'sucursal' ? 'Gestión Sucursal' : 'Caja y Ventas'}
                             </div>
                             {adminItems
                                 .filter(item => {
-                                    if (profile?.role === 'sucursal') {
-                                        return item.path === '/admin/order-approval' || item.path === '/shop'
+                                    if (profile?.role === 'sucursal' || profile?.role === 'cajero') {
+                                        return item.path === '/admin/order-approval' || item.path === '/shop' || item.path === '/admin/reports'
                                     }
                                     return true
                                 })
@@ -151,7 +151,11 @@ export default function Layout() {
                         <div className="user-profile">
                             <div className="user-info pc-only">
                                 <span className="user-name">{profile?.full_name}</span>
-                                <span className="user-role">{profile?.role}</span>
+                                <span className="user-role">
+                                    {profile?.role === 'admin' ? 'Administrador' :
+                                        profile?.role === 'sucursal' ? 'Gerente Sucursal' :
+                                            profile?.role === 'cajero' ? 'Cajero' : 'Afiliado'}
+                                </span>
                             </div>
                             <div className="user-avatar">
                                 {profile?.full_name?.charAt(0) || 'U'}

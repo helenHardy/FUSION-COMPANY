@@ -164,6 +164,41 @@
     gap: 10px;
 }
 
+.productList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.rankItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
+}
+
+.rankItem:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.rankName {
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
+.rankQty {
+    font-weight: 900;
+    color: var(--primary-light);
+    font-size: 0.9rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+
 /* Commission Breakdown */
 .breakdownList {
     display: flex;
@@ -309,6 +344,98 @@
     font-weight: 950;
     color: var(--text-main);
     font-size: 1.1rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.detailsBtn {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 10px;
+    color: #38bdf8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.detailsBtn:hover {
+    background: #38bdf8;
+    color: white;
+    transform: scale(1.05);
+}
+
+.detailsModalBody {
+    padding: 0.5rem;
+}
+
+.modalMeta {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+}
+
+.itemsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.itemRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.itemName {
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.giftBadge {
+    font-size: 0.65rem;
+    background: #10b981;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 100px;
+    width: fit-content;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.itemPricing {
+    font-weight: 800;
+    color: var(--primary-light);
+    font-family: 'Outfit', sans-serif;
+}
+
+.modalFooter {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    text-align: right;
+}
+
+.modalTotal {
+    font-size: 1.5rem;
+    font-weight: 950;
+    color: var(--text-main);
     font-family: 'Outfit', sans-serif;
 }
 

@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-import { UserPlus, Mail, Lock, User, CreditCard, Sparkles, Package, AlertCircle, Loader2 } from 'lucide-react'
+import { UserPlus, Mail, Lock, User, CreditCard, Sparkles, Package, AlertCircle, Loader2, Calendar } from 'lucide-react'
 import styles from './Register.module.css'
 
 export default function Register() {
@@ -18,6 +18,7 @@ export default function Register() {
         password: '',
         fullName: '',
         documentId: '',
+        birthDate: '',
         comboId: '',
         bankName: '',
         accountNumber: ''
@@ -80,7 +81,8 @@ export default function Register() {
                         sponsor_id: profile.id,
                         current_combo_id: formData.comboId,
                         bank_name: formData.bankName,
-                        account_number: formData.accountNumber
+                        account_number: formData.accountNumber,
+                        birth_date: formData.birthDate
                     }
                 }
             })
@@ -166,6 +168,21 @@ export default function Register() {
                                 placeholder="CI / Pasaporte"
                                 className={`input ${styles.inputField}`}
                                 value={formData.documentId}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label className={styles.label}>Fecha de Nacimiento</label>
+                        <div className={styles.inputWrapper}>
+                            <Calendar className={styles.inputIcon} size={18} />
+                            <input
+                                type="date"
+                                name="birthDate"
+                                className={`input ${styles.inputField}`}
+                                value={formData.birthDate}
                                 onChange={handleChange}
                                 required
                             />

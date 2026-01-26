@@ -169,6 +169,18 @@
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
+.comboBadge {
+    font-size: 0.7rem;
+    color: var(--primary-light);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: inline-block;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    font-weight: 500;
+}
+
 .nodeBody {
     flex: 1;
     min-width: 0;

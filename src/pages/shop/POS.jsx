@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { Search, ShoppingCart, User, Package, Trash2, Plus, Minus, CheckCircle, ArrowRight, X, Loader2, Sparkles, Printer } from 'lucide-react'
+import { Search, ShoppingCart, User, Package, Trash2, Plus, Minus, CheckCircle, ArrowRight, X, Loader2, Sparkles, Printer, ShieldAlert } from 'lucide-react'
 import { formatCurrency } from '../../lib/utils'
 import { Ticket } from './Ticket'
 import styles from './POS.module.css'
@@ -38,7 +38,31 @@ export default function POS() {
     }, [profile, selectedCustomer])
 
     const fetchBranches = async () => {
-        const { data } = await supabase.from('sucursales').select('*').eq('status', 'activo')
+        let query = supabase.from('sucursales').select('*').eq('status', 'activo')
+
+        // Si el usuario es sucursal o cajero, intentar encontrar su sucursal asignada
+        const isRestrictedRole = ['sucursal', 'cajero'].includes(profile?.role)
+
+        if (isRestrictedRole) {
+            const { data: assignedBranches } = await supabase
+                .from('sucursales')
+                .select('*')
+                .eq('manager_id', profile.id)
+                .eq('status', 'activo')
+
+            if (assignedBranches && assignedBranches.length > 0) {
+                setBranches(assignedBranches)
+                setSelectedBranch(assignedBranches[0].id)
+                return
+            } else {
+                // Si no tiene sucursal asignada, mostramos vacío o el sistema
+                setBranches([])
+                setSelectedBranch('')
+                return
+            }
+        }
+
+        const { data } = await query
         setBranches(data || [])
         if (data?.length > 0) setSelectedBranch(data[0].id)
     }
@@ -151,10 +175,23 @@ export default function POS() {
         setLoading(true)
         try {
             const items = cart.map(item => ({ product_id: item.id, quantity: item.quantity, price: item.price, pv: item.pv_points, price_at_sale: item.price, pv_at_sale: item.pv_points, is_gift: item.isGift }))
-            const isManager = ['admin', 'sucursal', 'cajero'].includes(profile.role)
+
+            // Si el vendedor es cajero, process_sale maneja la venta directa
             let rpcName = isManager ? 'process_sale' : 'create_pending_order'
-            let params = { p_user_id: selectedCustomer?.id || null, p_branch_id: selectedBranch, p_seller_id: profile.id, p_items: items }
-            if (!isManager) { params.p_total_amount = totalAmount; params.p_total_pv = totalPV }
+
+            // IMPORTANTE: Un cajero nunca debería ser el beneficiario de sus propios puntos 
+            // El beneficiario es el selectedCustomer. Si no hay, es una venta anónima sin puntos.
+            let params = {
+                p_user_id: selectedCustomer?.id || null,
+                p_branch_id: selectedBranch,
+                p_seller_id: profile.id,
+                p_items: items
+            }
+
+            if (!isManager) {
+                params.p_total_amount = totalAmount;
+                params.p_total_pv = totalPV
+            }
 
             const { error } = await supabase.rpc(rpcName, params)
             if (error) throw error
@@ -215,7 +252,13 @@ export default function POS() {
                 <div className={`${styles.filterBar} glass`}>
                     <div className={styles.branchBox}>
                         <label className={styles.inputLabel}>Punto de Venta</label>
-                        <select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)} className="input">
+                        <select
+                            value={selectedBranch}
+                            onChange={e => setSelectedBranch(e.target.value)}
+                            className="input"
+                            disabled={['sucursal', 'cajero'].includes(profile?.role)}
+                        >
+                            <option value="">-- Seleccionar --</option>
                             {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                         </select>
                     </div>
@@ -229,7 +272,13 @@ export default function POS() {
                 </div>
 
                 <div className={styles.productGrid}>
-                    {products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(product => (
+                    {(!selectedBranch && ['sucursal', 'cajero'].includes(profile?.role)) ? (
+                        <div className={styles.noBranchWarning}>
+                            <ShieldAlert size={48} />
+                            <h3>No tienes una sucursal asignada</h3>
+                            <p>Por favor, contacta a un administrador para que te asigne a una sucursal operativa.</p>
+                        </div>
+                    ) : products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(product => (
                         <div key={product.id} className={styles.productCard}>
                             <div className={styles.imageContainer}>
                                 {product.image_url ? <img src={product.image_url} alt={product.name} className={styles.image} /> : <Package className={styles.placeholderIcon} size={64} />}

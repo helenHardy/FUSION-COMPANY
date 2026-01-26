@@ -106,9 +106,20 @@ export default function UserList() {
         if (!selectedUser || submitting) return
         setSubmitting(true)
         try {
+            const updates = { role: newRole }
+
+            // Si el nuevo rol es cajero, activar automáticamente y limpiar datos de MLM
+            if (newRole === 'cajero') {
+                updates.status = 'activo'
+                updates.current_combo_id = null
+                updates.pv = 0
+                updates.monthly_pv = 0
+                updates.pvg = 0
+            }
+
             const { error } = await supabase
                 .from('profiles')
-                .update({ role: newRole })
+                .update(updates)
                 .eq('id', selectedUser.id)
 
             if (error) throw error
@@ -246,11 +257,17 @@ export default function UserList() {
                                             </Link>
                                             <button
                                                 className={styles.actionBtn}
-                                                style={{ color: user.status === 'activo' ? '#f87171' : '#10b981' }}
-                                                onClick={() => handleToggleStatus(user)}
-                                                title={user.status === 'activo' ? 'Inactivar' : 'Activar'}
+                                                style={{ color: user.status === 'activo' ? '#f87171' : (user.status === 'pendiente' ? '#94a3b8' : '#10b981') }}
+                                                onClick={() => {
+                                                    if (user.status === 'pendiente') {
+                                                        alert("Este usuario está PENDIENTE de pago. Por favor ve al módulo de 'Activaciones' para procesarlo correctamente.");
+                                                        return;
+                                                    }
+                                                    handleToggleStatus(user);
+                                                }}
+                                                title={user.status === 'activo' ? 'Inactivar' : (user.status === 'pendiente' ? 'Pendiente de Pago' : 'Activar')}
                                             >
-                                                {user.status === 'activo' ? <UserX size={18} /> : <UserCheck size={18} />}
+                                                {user.status === 'activo' ? <UserX size={18} /> : (user.status === 'pendiente' ? <Clock size={18} /> : <UserCheck size={18} />)}
                                             </button>
                                             <button
                                                 className={styles.actionBtn}

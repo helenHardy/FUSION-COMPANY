@@ -75,8 +75,8 @@ BEGIN
       total_pv = v_total_pv 
   WHERE id = v_sale_id;
 
-  -- 4. SUMAR PV AL USUARIO Y PVG A LA RED
-  IF v_total_pv > 0 THEN
+  -- 4. SUMAR PV AL USUARIO Y PVG A LA RED (Solo si NO es venta anónima)
+  IF v_total_pv > 0 AND p_user_id IS NOT NULL THEN
     -- A. Actualizar PV Personal y Mensual
     -- Primero obtenemos el estado actual del PV mensual
     SELECT monthly_pv, sponsor_id INTO v_old_monthly_pv, v_sponsor_id FROM public.profiles WHERE id = p_user_id;

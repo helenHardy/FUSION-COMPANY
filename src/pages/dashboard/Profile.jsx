@@ -94,8 +94,11 @@ export default function Profile() {
                     <User size={48} />
                 </div>
                 <h1 className={styles.userName}>{profile.full_name}</h1>
-                <div className={styles.userRole}>{profile.role}</div>
-                <div className={styles.userRole}>{profile.role}</div>
+                <div className={styles.userRole}>
+                    {profile.role === 'admin' ? 'Administrador' :
+                        profile.role === 'sucursal' ? 'Gerente Sucursal' :
+                            profile.role === 'cajero' ? 'Cajero' : 'Afiliado'}
+                </div>
 
                 <div className={`${styles.statusBadge} ${isActive ? styles.statusActive : styles.statusInactive}`}>
                     {isActive ? (
@@ -141,6 +144,16 @@ export default function Profile() {
                     <div>
                         <span className={styles.fieldLabel}>Fecha de Activación</span>
                         <div className={styles.fieldValue}>{formatDate(profile.activation_date)}</div>
+                    </div>
+                </div>
+
+                <div className={`${styles.infoCard} glass`}>
+                    <div className={styles.iconContainer}>
+                        <Calendar size={20} />
+                    </div>
+                    <div>
+                        <span className={styles.fieldLabel}>Fecha de Nacimiento</span>
+                        <div className={styles.fieldValue}>{formatDate(profile.birth_date)}</div>
                     </div>
                 </div>
 

@@ -32,8 +32,8 @@ export default function OrderApproval() {
                 .eq('status', 'pendiente')
                 .order('created_at', { ascending: false })
 
-            // Si es sucursal, filtrar por su sucursal asignada
-            if (profile.role === 'sucursal') {
+            // Si es sucursal o cajero, filtrar por su sucursal asignada
+            if (profile.role === 'sucursal' || profile.role === 'cajero') {
                 const { data: branch } = await supabase.from('sucursales').select('id').eq('manager_id', profile.id).maybeSingle()
                 if (branch) query = query.eq('branch_id', branch.id)
                 else {

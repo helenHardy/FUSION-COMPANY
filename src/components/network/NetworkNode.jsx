@@ -17,7 +17,7 @@ export default function NetworkNode({ affiliate }) {
         try {
             const { data } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('*, combos(name)')
                 .eq('sponsor_id', affiliate.id)
             setChildren(data || [])
         } catch (err) {
@@ -57,6 +57,9 @@ export default function NetworkNode({ affiliate }) {
                             <div className={styles.statLine}>
                                 <TrendingUp size={10} /> <span>{affiliate.pvg || 0} PVG</span>
                             </div>
+                        </div>
+                        <div className={styles.comboBadge}>
+                            {affiliate.combos?.name || 'Sin Combo'}
                         </div>
                     </div>
 
