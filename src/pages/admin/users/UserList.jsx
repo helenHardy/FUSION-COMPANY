@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { formatCurrency, formatDate } from '../../../lib/utils'
 import Modal from '../../../components/ui/Modal'
 import styles from './UserList.module.css'
+import UserEditModal from './UserEditModal'
 
 export default function UserList() {
     const { profile } = useAuth()
@@ -134,6 +135,14 @@ export default function UserList() {
         }
     }
 
+    const [editModalOpen, setEditModalOpen] = useState(false)
+    const [userToEdit, setUserToEdit] = useState(null)
+
+    const handleEditUser = (user) => {
+        setUserToEdit(user)
+        setEditModalOpen(true)
+    }
+
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.document_id?.includes(searchQuery)
@@ -247,6 +256,13 @@ export default function UserList() {
                                     </td>
                                     <td className={styles.td}>
                                         <div className={styles.actions}>
+                                            <button
+                                                className={styles.actionBtn}
+                                                onClick={() => handleEditUser(user)}
+                                                title="Ver/Editar Detalles"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
                                             <Link
                                                 to={`/admin/network/${user.id}`}
                                                 className={styles.actionBtn}
@@ -338,6 +354,13 @@ export default function UserList() {
                     </button>
                 </div>
             </Modal>
+
+            <UserEditModal
+                isOpen={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                user={userToEdit}
+                onUserUpdated={fetchUsers}
+            />
         </div>
     )
 }

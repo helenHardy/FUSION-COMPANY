@@ -153,7 +153,30 @@ export default function Profile() {
                     </div>
                     <div>
                         <span className={styles.fieldLabel}>Fecha de Nacimiento</span>
-                        <div className={styles.fieldValue}>{formatDate(profile.birth_date)}</div>
+                        <div className={styles.fieldValue}>
+                            {profile.birth_date ? (() => {
+                                // Fix timezone issue by appending time
+                                const date = new Date(profile.birth_date + 'T12:00:00')
+                                const ageDifMs = Date.now() - date.getTime()
+                                const ageDate = new Date(ageDifMs)
+                                const age = Math.abs(ageDate.getUTCFullYear() - 1970)
+
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span>{new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', year: 'numeric' }).format(date)}</span>
+                                        <span style={{
+                                            fontSize: '0.75rem',
+                                            background: 'var(--bg-accent)',
+                                            padding: '2px 8px',
+                                            borderRadius: '12px',
+                                            color: 'var(--text-accent)'
+                                        }}>
+                                            {age} años
+                                        </span>
+                                    </div>
+                                )
+                            })() : 'No registrado'}
+                        </div>
                     </div>
                 </div>
 
