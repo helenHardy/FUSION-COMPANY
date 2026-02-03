@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../context/AuthContext'
-import { BarChart3, ShoppingBag, Users, Zap, Calendar, TrendingUp, Wallet, ArrowDownCircle, Info, Filter, Download, RefreshCw, Target, PieChart, Loader2, Eye, Star } from 'lucide-react'
+import { BarChart3, ShoppingBag, Users, Zap, Calendar, TrendingUp, Wallet, ArrowDownCircle, Info, Filter, Download, RefreshCw, Target, PieChart, Loader2, Eye, Star, Store } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../../lib/utils'
 import Table from '../../../components/ui/Table'
 import Modal from '../../../components/ui/Modal'
@@ -12,7 +12,14 @@ export default function GlobalSales() {
     const [sales, setSales] = useState([])
     const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState(null)
-    const [filterRange, setFilterRange] = useState('30') // 'today', '7', '30', 'all'
+
+    // Filters
+    const [branches, setBranches] = useState([])
+    const [selectedBranch, setSelectedBranch] = useState('all')
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString())
+    const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString())
+    const [selectedDay, setSelectedDay] = useState(new Date().getDate().toString())
+
     const [productsRanking, setProductsRanking] = useState([])
     const [bestSeller, setBestSeller] = useState(null)
 
@@ -25,112 +32,121 @@ export default function GlobalSales() {
     const isAdmin = profile?.role === 'admin'
 
     useEffect(() => {
-        fetchData()
-    }, [filterRange])
+        fetchBranches()
+    }, [])
 
-    const getDates = () => {
-        const end = new Date()
-        let start = new Date()
-        if (filterRange === 'today') start.setHours(0, 0, 0, 0)
-        else if (filterRange === '7') start.setDate(end.getDate() - 7)
-        else if (filterRange === '30') start.setDate(end.getDate() - 30)
-        else start = new Date('2025-01-01')
-        return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0] }
+    useEffect(() => {
+        fetchData()
+    }, [selectedBranch, selectedYear, selectedMonth, selectedDay])
+
+    const fetchBranches = async () => {
+        if (!isAdmin) return
+        const { data } = await supabase.from('sucursales').select('*').order('name')
+        if (data) setBranches(data)
     }
 
     const fetchData = async () => {
         setLoading(true)
-        const { start, end } = getDates()
         try {
-            let branchId = null
-            if (!isAdmin) {
-                // Si no es admin, buscar la sucursal de la que es encargado/cajero
+            let query = supabase
+                .from('sales')
+                .select('*, profiles(full_name), sucursales(name)')
+                .order('created_at', { ascending: false })
+
+            // 1. Apply Branch Filter
+            if (isAdmin) { // Admins can filter
+                if (selectedBranch !== 'all') {
+                    query = query.eq('branch_id', selectedBranch)
+                }
+            } else { // Non-admins are locked to their branch
                 const { data: branch } = await supabase
                     .from('sucursales')
                     .select('id')
                     .eq('manager_id', profile.id)
                     .maybeSingle()
 
-                if (branch) branchId = branch.id
-                else {
+                if (branch) {
+                    query = query.eq('branch_id', branch.id)
+                } else {
                     setSales([])
-                    setStats(null)
                     setLoading(false)
                     return
                 }
             }
 
-            // 1. Fetch Sales and Stats
-            let fetchedSales = []
-            if (isAdmin) {
-                const [statsRes, salesRes] = await Promise.all([
-                    supabase.rpc('get_admin_dashboard_stats', { p_start_date: start, p_end_date: end }),
-                    supabase.from('sales').select('*, profiles(full_name), sucursales(name)')
-                        .gte('created_at', start)
-                        .lte('created_at', end + 'T23:59:59')
-                        .order('created_at', { ascending: false })
-                ])
-                if (statsRes.data) setStats(statsRes.data)
-                if (salesRes.data) fetchedSales = salesRes.data || []
+            // 2. Apply Date Filters
+            let startDate, endDate
+
+            // Create dates in local time (browser timezone)
+            const year = parseInt(selectedYear)
+            const month = parseInt(selectedMonth) - 1 // JS months are 0-indexed
+
+            if (selectedDay !== 'all') {
+                // Specific Day in Local Time
+                const day = parseInt(selectedDay)
+                const start = new Date(year, month, day, 0, 0, 0) // Local start of day
+                const end = new Date(year, month, day, 23, 59, 59, 999) // Local end of day
+
+                startDate = start.toISOString()
+                endDate = end.toISOString()
             } else {
-                // Lógica para sucursal/cajero (Filtrado local)
-                const { data: bSales, error: bError } = await supabase
-                    .from('sales')
-                    .select('*, profiles(full_name), sucursales(name)')
-                    .eq('branch_id', branchId)
-                    .gte('created_at', start)
-                    .lte('created_at', end + 'T23:59:59')
-                    .order('created_at', { ascending: false })
+                // Whole Month in Local Time
+                const start = new Date(year, month, 1, 0, 0, 0)
+                const end = new Date(year, month + 1, 0, 23, 59, 59, 999) // Last day of month
 
-                if (bSales) {
-                    fetchedSales = bSales
-                    // Calcular estadísticas básicas de la sucursal manualmente ya que el RPC es global
-                    const revenue = bSales.reduce((acc, sale) => acc + (parseFloat(sale.total_amount) || 0), 0)
-                    const pvTotal = bSales.reduce((acc, sale) => acc + (parseFloat(sale.total_pv) || 0), 0)
-                    const count = bSales.length
-
-                    setStats({
-                        revenue,
-                        pv_total: pvTotal,
-                        orders_count: count,
-                        // El resto de campos del admin no aplican aquí
-                    })
-                }
+                startDate = start.toISOString()
+                endDate = end.toISOString()
             }
-            setSales(fetchedSales)
 
-            // 2. Fetch Best Seller Logic
-            if (fetchedSales.length > 0) {
+            query = query.gte('created_at', startDate).lte('created_at', endDate)
+
+            const { data: fetchedSales, error } = await query
+
+            if (error) throw error
+
+            setSales(fetchedSales || [])
+
+            // 3. Process Stats Locally
+            if (fetchedSales) {
+                const totalRevenue = fetchedSales.reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0)
+                const totalPV = fetchedSales.reduce((sum, s) => sum + (Number(s.total_pv) || 0), 0)
+
+                setStats({
+                    revenue: totalRevenue,
+                    orders: fetchedSales.length,
+                    pv: totalPV
+                })
+
+                // 4. Process Product Breakdown
                 const saleIds = fetchedSales.map(s => s.id)
-                const { data: items } = await supabase
-                    .from('sale_items')
-                    .select('product_id, quantity, products(name)')
-                    .in('sale_id', saleIds)
+                if (saleIds.length > 0) {
+                    const { data: items } = await supabase
+                        .from('sale_items')
+                        .select('quantity, products(name)')
+                        .in('sale_id', saleIds)
 
-                if (items) {
-                    const grouping = {}
-                    items.forEach(item => {
-                        const name = item.products?.name || 'Desconocido'
-                        grouping[name] = (grouping[name] || 0) + item.quantity
-                    })
-                    const sorted = Object.entries(grouping)
-                        .map(([name, qty]) => ({ name, qty }))
-                        .sort((a, b) => b.qty - a.qty)
+                    if (items) {
+                        const productMap = {}
+                        items.forEach(item => {
+                            const name = item.products?.name || 'Producto Eliminado'
+                            productMap[name] = (productMap[name] || 0) + item.quantity
+                        })
 
-                    setProductsRanking(sorted)
-                    if (sorted.length > 0) {
-                        setBestSeller(sorted[0])
-                    } else {
-                        setBestSeller(null)
+                        const ranked = Object.entries(productMap)
+                            .map(([name, qty]) => ({ name, qty }))
+                            .sort((a, b) => b.qty - a.qty)
+
+                        setProductsRanking(ranked)
+                        setBestSeller(ranked[0] || null)
                     }
+                } else {
+                    setProductsRanking([])
+                    setBestSeller(null)
                 }
-            } else {
-                setBestSeller(null)
-                setProductsRanking([])
             }
 
         } catch (err) {
-            console.error("Error fetching global report:", err)
+            console.error("Error fetching report:", err)
         } finally {
             setLoading(false)
         }
@@ -140,11 +156,10 @@ export default function GlobalSales() {
         setSelectedSale(sale)
         setDetailsLoading(true)
         try {
-            const { data, error } = await supabase
+            const { data } = await supabase
                 .from('sale_items')
-                .select('*, products(name, image_url)')
+                .select('*, products(name)')
                 .eq('sale_id', sale.id)
-
             if (data) setSaleDetails(data)
         } catch (error) {
             console.error(error)
@@ -153,217 +168,171 @@ export default function GlobalSales() {
         }
     }
 
+    const years = [2024, 2025, 2026]
+    const months = Array.from({ length: 12 }, (_, i) => i + 1)
+    const days = Array.from({ length: 31 }, (_, i) => i + 1)
+
     return (
         <div className={styles.container}>
             <header className={styles.header}>
                 <div>
-                    <h1 className={styles.title}>
-                        Reporte <span className={styles.highlight}>Global</span>
-                    </h1>
-                    <p className={styles.subtitle}>Supervisión analítica de ingresos, comisiones y crecimiento de red.</p>
+                    <h1 className={styles.title}>Reporte <span className={styles.highlight}>Comercial</span></h1>
+                    <p className={styles.subtitle}>Análisis detallado de ventas por sucursal y periodo.</p>
                 </div>
-
-                <div className={styles.controls}>
-                    <div className={styles.rangeSelector}>
-                        {['today', '7', '30', 'all'].map((r) => (
-                            <button
-                                key={r}
-                                onClick={() => setFilterRange(r)}
-                                className={`${styles.rangeBtn} ${filterRange === r ? styles.rangeBtnActive : ''}`}
-                            >
-                                {r === 'today' ? 'Hoy' : r === '7' ? '7 días' : r === '30' ? '30 días' : 'Todo'}
-                            </button>
-                        ))}
-                    </div>
-                    <button className={styles.refreshBtn} onClick={fetchData} title="Refrescar datos">
-                        <RefreshCw size={20} className={loading ? 'spinner' : ''} />
-                    </button>
-                </div>
+                <button className={styles.refreshBtn} onClick={fetchData}><RefreshCw size={20} /></button>
             </header>
 
-            {/* High-Impact Executive KPIs */}
+            {/* Advanced Filters */}
+            <div className={`${styles.filterBar} glass`}>
+                <div className={styles.filterGroup}>
+                    <label className={styles.filterLabel}><Store size={14} /> Sucursal</label>
+                    <select
+                        className={styles.select}
+                        value={selectedBranch}
+                        onChange={(e) => setSelectedBranch(e.target.value)}
+                        disabled={!isAdmin}
+                    >
+                        <option value="all">Todas las Sucursales</option>
+                        {branches.map(b => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className={styles.divider}></div>
+
+                <div className={styles.dateFilters}>
+                    <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>Año</label>
+                        <select className={styles.select} value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+                            {years.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
+                    <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>Mes</label>
+                        <select className={styles.select} value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+                            {months.map(m => <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('es-ES', { month: 'long' })}</option>)}
+                        </select>
+                    </div>
+                    <div className={styles.filterGroup}>
+                        <label className={styles.filterLabel}>Día</label>
+                        <select className={styles.select} value={selectedDay} onChange={(e) => setSelectedDay(e.target.value)}>
+                            <option value="all">Todo el Mes</option>
+                            {days.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {/* KPI Cards */}
             <div className={styles.kpiGrid}>
                 <StatsBox
-                    label={isAdmin ? "Ingresos Totales" : "Ventas de Sucursal"}
+                    label="Ingresos Netos"
                     value={formatCurrency(stats?.revenue || 0)}
-                    icon={<TrendingUp size={24} />}
+                    icon={<Wallet size={24} />}
                     color="#10b981"
-                    description={isAdmin ? "Bruto facturado" : "Total recaudado"}
+                    description="Total facturado en periodo"
                 />
                 <StatsBox
-                    label="Producto Estrella"
-                    value={bestSeller?.name || 'N/A'}
+                    label="Ventas Realizadas"
+                    value={stats?.orders || 0}
+                    icon={<ShoppingBag size={24} />}
+                    color="#6366f1"
+                    description="Transacciones completadas"
+                />
+                <StatsBox
+                    label="Producto Top"
+                    value={bestSeller?.name || '---'}
                     icon={<Star size={24} />}
                     color="#f59e0b"
-                    description={bestSeller ? `${bestSeller.qty} unidades vendidas` : 'Sin datos'}
+                    description={bestSeller ? `${bestSeller.qty} unidades` : 'Sin datos'}
                 />
-                <StatsBox
-                    label="Volumen Generado"
-                    value={`${(stats?.pv_total || 0).toLocaleString()} PV`}
-                    icon={<Zap size={24} />}
-                    color="#0ea5e9"
-                    description="Puntos cargados"
-                />
-                {isAdmin ? (
-                    <StatsBox
-                        label="Adeudo Cash"
-                        value={formatCurrency(stats?.pending_liquidations || 0)}
-                        icon={<Wallet size={24} />}
-                        color="#fbbf24"
-                        description="Pagos pendientes"
-                    />
-                ) : (
-                    <StatsBox
-                        label="Pedidos Gestionados"
-                        value={stats?.orders_count || 0}
-                        icon={<ShoppingBag size={24} />}
-                        color="#6366f1"
-                        description="Ordenes totales"
-                    />
-                )}
             </div>
 
-            {isAdmin && (
-                <div className={styles.metricsGrid}>
-                    <div className={`${styles.card} glass`}>
-                        <header className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>
-                                <PieChart size={20} color="var(--primary-light)" /> Desglose de Comisiones
-                            </h3>
-                        </header>
-                        <div className={styles.breakdownList}>
-                            <BreakdownItem label="Inicio Rápido" value={stats?.commissions_breakdown?.bono_inicio_rapido} color="#0ea5e9" percentage={75} />
-                            <BreakdownItem label="Regalías Residuales" value={stats?.commissions_breakdown?.regalia} color="#8b5cf6" percentage={45} />
-                            <BreakdownItem label="Bonos de Consumo" value={stats?.commissions_breakdown?.bono_pv_mensual} color="#f59e0b" percentage={20} />
-                        </div>
-                    </div>
-
-                    <div className={`${styles.card} glass`}>
-                        <header className={styles.cardHeader}>
-                            <h3 className={styles.cardTitle}>
-                                <Target size={20} color="#0ea5e9" /> Rendimiento de Red
-                            </h3>
-                            <BarChart3 size={20} color="var(--text-dim)" />
-                        </header>
-                        <div className={styles.performanceStats}>
-                            <div className={styles.miniCard}>
-                                <div className={styles.miniLabel}>VOLUMEN TOTAL PV</div>
-                                <div className={styles.miniValue}>{stats?.pv_total?.toLocaleString() || 0}</div>
-                            </div>
-                            <div className={styles.miniCard}>
-                                <div className={styles.miniLabel}>SOCIOS ACTIVOS</div>
-                                <div className={styles.miniValue}>{stats?.active_users_count || 0}</div>
-                            </div>
-                        </div>
-                        <div className={styles.footerNote}>
-                            Total desembolsado históricamente: <span style={{ color: 'white', fontWeight: '800' }}>{formatCurrency(stats?.total_paid_payouts || 0)}</span>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className={styles.metricsGrid}>
+            <div className={styles.contentGrid}>
+                {/* Product Breakdown */}
                 <div className={`${styles.card} glass`}>
                     <header className={styles.cardHeader}>
-                        <h3 className={styles.cardTitle}>
-                            <ShoppingBag size={20} color="var(--primary-light)" /> Ventas por Producto
-                        </h3>
+                        <h3 className={styles.cardTitle}><ShoppingBag size={18} /> Productos Vendidos</h3>
                     </header>
                     <div className={styles.productList}>
-                        {productsRanking.length > 0 ? productsRanking.map((p, i) => (
-                            <div key={i} className={styles.rankItem}>
-                                <span className={styles.rankName}>{p.name}</span>
-                                <span className={styles.rankQty}>{p.qty} unid.</span>
-                            </div>
-                        )) : (
-                            <p style={{ color: 'var(--text-dim)', textAlign: 'center', padding: '1rem' }}>No hay datos de productos.</p>
-                        )}
+                        <div className={styles.tableHeaderRow}>
+                            <span>Producto</span>
+                            <span>Cant.</span>
+                        </div>
+                        <div className={styles.tableBody}>
+                            {productsRanking.length > 0 ? productsRanking.map((p, i) => (
+                                <div key={i} className={styles.productRow}>
+                                    <span className={styles.prodName}>{p.name}</span>
+                                    <span className={styles.prodQty}>{p.qty}</span>
+                                </div>
+                            )) : (
+                                <div className={styles.emptyState}>No hay productos vendidos en este periodo.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sales History */}
+                <div className={`${styles.card} glass`} style={{ flex: 2 }}>
+                    <header className={styles.cardHeader}>
+                        <h3 className={styles.cardTitle}><Calendar size={18} /> Historial de Ventas</h3>
+                    </header>
+                    <div className={styles.tableContainer}>
+                        <table className={styles.historyTable}>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Vendedor</th>
+                                    {isAdmin && <th>Sucursal</th>}
+                                    <th>Total</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr><td colSpan="5" className="text-center p-4"><Loader2 className="spinner" /></td></tr>
+                                ) : sales.map(sale => (
+                                    <tr key={sale.id}>
+                                        <td>{formatDate(sale.created_at)}</td>
+                                        <td>{sale.profiles?.full_name || 'Desconocido'}</td>
+                                        {isAdmin && <td>{sale.sucursales?.name}</td>}
+                                        <td style={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(sale.total_amount)}</td>
+                                        <td>
+                                            <button className={styles.iconBtn} onClick={() => handleViewDetails(sale)}>
+                                                <Eye size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {!loading && sales.length === 0 && (
+                                    <tr><td colSpan="5" className={styles.emptyTable}>Sin registros.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div className={`${styles.card} glass`} style={{ padding: 0 }}>
-                <header className={styles.tableHeader}>
-                    <h3 className={styles.cardTitle}>Libro Diario de Facturación</h3>
-                    <button className={styles.exportBtn}>
-                        <Download size={16} /> Exportar Reporte
-                    </button>
-                </header>
-                <Table headers={['Fecha / Hora', 'Miembro Fusion', 'Punto de Venta', 'Puntos (PV)', 'Total', 'Detalles']}>
-                    {loading && sales.length === 0 ? (
-                        <tr>
-                            <td colSpan="6" style={{ textAlign: 'center', padding: '4rem' }}>
-                                <Loader2 className="spinner" size={40} />
-                            </td>
-                        </tr>
-                    ) : sales.map(sale => (
-                        <tr key={sale.id} className={styles.tr}>
-                            <td className={styles.td}>
-                                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{formatDate(sale.created_at)}</div>
-                            </td>
-                            <td className={styles.td}>
-                                <div className={styles.userName}>{sale.profiles?.full_name || 'Miembro General'}</div>
-                            </td>
-                            <td className={styles.td}>
-                                <div className={styles.branchName}>{sale.sucursales?.name || 'Oficina Central'}</div>
-                            </td>
-                            <td className={styles.td}>
-                                <div className={styles.pvValue}>{sale.total_pv.toFixed(0)} PV</div>
-                            </td>
-                            <td className={styles.td}>
-                                <div className={styles.amountValue}>{formatCurrency(sale.total_amount)}</div>
-                            </td>
-                            <td className={styles.td}>
-                                <button className={styles.detailsBtn} onClick={() => handleViewDetails(sale)} title="Ver Productos">
-                                    <Eye size={18} />
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                </Table>
-
-                <Modal
-                    isOpen={!!selectedSale}
-                    onClose={() => setSelectedSale(null)}
-                    title="Detalle de Consumo"
-                    width="600px"
-                >
-                    {selectedSale && (
-                        <div className={styles.detailsModalBody}>
-                            <div className={styles.modalMeta}>
-                                <div><strong>Venta:</strong> {selectedSale.id.slice(0, 8)}</div>
-                                <div><strong>Fecha:</strong> {formatDate(selectedSale.created_at)}</div>
-                            </div>
-
-                            <div className={styles.itemsList}>
-                                {detailsLoading ? <Loader2 className="spinner" /> : saleDetails.map((item, idx) => (
-                                    <div key={idx} className={styles.itemRow}>
-                                        <div className={styles.itemName}>
-                                            {item.products?.name}
-                                            {item.is_gift && <span className={styles.giftBadge}>GRATIS (REGALO)</span>}
-                                        </div>
-                                        <div className={styles.itemPricing}>
-                                            {item.quantity} x {item.is_gift ? '0.00' : formatCurrency(item.price_at_sale)}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className={styles.modalFooter}>
-                                <div className={styles.modalTotal}>
-                                    Total: {formatCurrency(selectedSale.total_amount)}
-                                </div>
-                            </div>
+            {/* Details Modal */}
+            <Modal isOpen={!!selectedSale} onClose={() => setSelectedSale(null)} title="Detalle de Venta">
+                {selectedSale && (
+                    <div className={styles.detailsContent}>
+                        <div className={styles.detailHeader}>
+                            <div><strong>ID Venta:</strong> #{selectedSale.id.slice(0, 8)}</div>
+                            <div><strong>Total:</strong> {formatCurrency(selectedSale.total_amount)}</div>
                         </div>
-                    )}
-                </Modal>
-                {!loading && sales.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-dim)' }}>
-                        <ShoppingBag size={48} style={{ opacity: 0.1, marginBottom: '1rem' }} />
-                        <p>No se registraron ventas en el periodo seleccionado.</p>
+                        <div className={styles.detailItems}>
+                            {detailsLoading ? <Loader2 className="spinner" /> : saleDetails.map((item, i) => (
+                                <div key={i} className={styles.detailItem}>
+                                    <span>{item.products?.name} <span className={styles.qtyBadge}>x{item.quantity}</span></span>
+                                    <span>{formatCurrency(item.price_at_sale * item.quantity)}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
-            </div>
+            </Modal>
         </div>
     )
 }
@@ -374,31 +343,10 @@ function StatsBox({ label, value, icon, color, description }) {
             <div>
                 <div className={styles.statsLabel}>{label}</div>
                 <div className={styles.statsValue}>{value}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '4px' }}>{description}</div>
+                <div className={styles.statsDesc}>{description}</div>
             </div>
             <div className={styles.statsIcon} style={{ background: `${color}15`, color: color, border: `1px solid ${color}25` }}>
                 {icon}
-            </div>
-        </div>
-    )
-}
-
-function BreakdownItem({ label, value, color, percentage }) {
-    return (
-        <div className={styles.breakdownItem}>
-            <div className={styles.breakdownMeta}>
-                <span className={styles.breakdownLabel}>{label}</span>
-                <span className={styles.breakdownValue}>{formatCurrency(value || 0)}</span>
-            </div>
-            <div className={styles.progressBar}>
-                <div
-                    className={styles.progressFill}
-                    style={{
-                        width: `${percentage}%`,
-                        background: `linear-gradient(90deg, ${color} 0%, ${color}CC 100%)`,
-                        boxShadow: `0 0 10px ${color}44`
-                    }}
-                />
             </div>
         </div>
     )

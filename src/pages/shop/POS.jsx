@@ -282,6 +282,11 @@ export default function POS() {
                         <div key={product.id} className={styles.productCard}>
                             <div className={styles.imageContainer}>
                                 {product.image_url ? <img src={product.image_url} alt={product.name} className={styles.image} /> : <Package className={styles.placeholderIcon} size={64} />}
+                                <div className={styles.overlay}>
+                                    <button className={styles.addButtonOverlay} onClick={() => addToCart(product)}>
+                                        <Plus size={32} />
+                                    </button>
+                                </div>
                             </div>
                             <div className={styles.infoBox}>
                                 <h4 className={styles.productName}>{product.name}</h4>
@@ -290,7 +295,6 @@ export default function POS() {
                                     <div className={styles.pvBadge}>{product.pv_points} PV</div>
                                 </div>
                                 <div className={`${styles.stock} ${product.stock < 10 ? styles.stockLow : styles.stockNormal}`}>{product.stock} unidades</div>
-                                <button className={styles.addButton} onClick={() => addToCart(product)}><Plus size={18} /> Añadir</button>
                             </div>
                         </div>
                     ))}
