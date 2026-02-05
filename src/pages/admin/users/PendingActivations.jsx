@@ -11,37 +11,70 @@ import styles from './UserList.module.css' // Reusing styles
 export default function PendingActivations() {
     const { profile } = useAuth()
     const [pendingUsers, setPendingUsers] = useState([])
+    const [combos, setCombos] = useState([])
     const [loading, setLoading] = useState(true)
     const [activatingId, setActivatingId] = useState(null)
 
     useEffect(() => {
-        fetchPendingUsers()
+        fetchInitialData()
     }, [])
 
-    const fetchPendingUsers = async () => {
+    const fetchInitialData = async () => {
         setLoading(true)
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select(`
-                    *,
-                    sponsor:sponsor_id (full_name),
-                    combo:current_combo_id (name, price, pv_awarded)
-                `)
-                .eq('status', 'pendiente')
-                .order('created_at', { ascending: false })
+            const [usersRes, combosRes] = await Promise.all([
+                supabase
+                    .from('profiles')
+                    .select(`
+                        *,
+                        sponsor:sponsor_id (full_name),
+                        combo:current_combo_id (id, name, price, pv_awarded)
+                    `)
+                    .eq('status', 'pendiente')
+                    .order('created_at', { ascending: false }),
+                supabase
+                    .from('combos')
+                    .select('id, name, price, pv_awarded, free_products_count')
+                    .eq('status', 'activo')
+                    .order('price', { ascending: true })
+            ])
 
-            if (error) throw error
-            setPendingUsers(data || [])
+            if (usersRes.error) throw usersRes.error
+            if (combosRes.error) throw combosRes.error
+
+            setPendingUsers(usersRes.data || [])
+            setCombos(combosRes.data || [])
         } catch (err) {
-            console.error("Error al cargar pendientes:", err)
+            console.error("Error al cargar datos de activación:", err)
         } finally {
             setLoading(false)
         }
     }
 
+    const handleComboChange = async (userId, newComboId) => {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ current_combo_id: newComboId })
+                .eq('id', userId)
+
+            if (error) throw error
+
+            // Actualizar localmente para no re-renderizar todo
+            setPendingUsers(prev => prev.map(u => {
+                if (u.id === userId) {
+                    const newCombo = combos.find(c => c.id === newComboId)
+                    return { ...u, current_combo_id: newComboId, combo: newCombo }
+                }
+                return u
+            }))
+        } catch (err) {
+            alert("Error al cambiar combo: " + err.message)
+        }
+    }
+
     const handleActivate = async (userId) => {
-        if (!confirm('¿Confirmas que has recibido el pago y deseas activar esta cuenta?')) return
+        if (!confirm('¿Confirmas que has recibido el pago y deseas activar esta cuenta con el combo seleccionado?')) return
 
         setActivatingId(userId)
         try {
@@ -52,8 +85,8 @@ export default function PendingActivations() {
 
             if (error) throw error
 
-            alert('Cuenta activada exitosamente. Se han distribuido los puntos y comisiones.')
-            fetchPendingUsers()
+            alert('Cuenta activada exitosamente. Se han distribuido los puntos y comisiones según el combo elegido.')
+            fetchInitialData()
         } catch (err) {
             console.error("Error al activar:", err)
             alert("Error al activar: " + err.message)
@@ -94,11 +127,35 @@ export default function PendingActivations() {
                             </td>
                             <td className={styles.td}>
                                 <div className={styles.dataText}>
-                                    <ShoppingBag size={14} style={{ display: 'inline', marginRight: '6px' }} />
-                                    {user.combo?.name || 'N/A'}
+                                    <select
+                                        className="input"
+                                        style={{
+                                            marginBottom: 0,
+                                            padding: '4px 8px',
+                                            fontSize: '0.85rem',
+                                            height: 'auto',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: 'var(--text-main)',
+                                            width: '100%'
+                                        }}
+                                        value={user.current_combo_id}
+                                        onChange={(e) => handleComboChange(user.id, e.target.value)}
+                                    >
+                                        {combos.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name} ({formatCurrency(c.price)})
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
-                                <div className={styles.secondaryText} style={{ color: '#10b981', fontWeight: '800' }}>
-                                    {formatCurrency(user.combo?.price || 0)}
+                                <div className={styles.secondaryText} style={{ color: '#10b981', fontWeight: '800', marginTop: '4px' }}>
+                                    <Sparkles size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                                    {combos.find(c => c.id === user.current_combo_id)?.pv_awarded || user.combo?.pv_awarded || 0} PV otorgados
+                                </div>
+                                <div className={styles.secondaryText} style={{ color: '#f59e0b', fontWeight: '800', marginTop: '4px' }}>
+                                    <ShoppingBag size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                                    {combos.find(c => c.id === user.current_combo_id)?.free_products_count ?? user.combo?.free_products_count ?? 0} Prod. regalo
                                 </div>
                             </td>
                             <td className={styles.td}>
@@ -140,6 +197,6 @@ export default function PendingActivations() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }
