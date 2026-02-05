@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { Search, ShoppingCart, User, Package, Trash2, Plus, Minus, CheckCircle, ArrowRight, X, Loader2, Sparkles, Printer, ShieldAlert } from 'lucide-react'
+import { Search, ShoppingCart, User, Package, Trash2, Plus, Minus, CheckCircle, ArrowRight, X, Loader2, Sparkles, Printer, ShieldAlert, Wallet } from 'lucide-react'
 import { formatCurrency } from '../../lib/utils'
 import { Ticket } from './Ticket'
 import styles from './POS.module.css'
@@ -20,6 +20,7 @@ export default function POS() {
     const [success, setSuccess] = useState(null)
     const [lastSale, setLastSale] = useState(null)
     const [showCart, setShowCart] = useState(false)
+    const [printFormat, setPrintFormat] = useState('thermal')
 
     useEffect(() => {
         fetchBranches()
@@ -212,30 +213,51 @@ export default function POS() {
         iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none';
         document.body.appendChild(iframe);
         const doc = iframe.contentWindow.document;
-        const css = `
+
+        const thermalCSS = `
             @page { size: 58mm auto; margin: 0; }
             body { margin: 0; padding: 0; width: 58mm; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 8pt; line-height: 1.2; overflow-x: hidden; }
             #printable-ticket { width: 58mm; padding: 2mm 1mm; box-sizing: border-box; }
             .ticketHeader { text-align: center; margin-bottom: 2mm; border-bottom: 0.5pt dashed black; padding-bottom: 1.5mm; }
             .ticketTitle { font-size: 10pt; font-weight: 950; line-height: 1.1; margin: 0; }
-            .ticketSubtitle { font-size: 8pt; font-weight: 700; margin-top: 1mm; }
             .divider { text-align: center; margin: 1.5mm 0; font-weight: 900; letter-spacing: -1px; }
             .ticketMeta { font-size: 8pt; margin-bottom: 2mm; }
-            .metaRow { display: flex; justify-content: space-between; margin-bottom: 0.5mm; line-height: 1; }
+            .metaRow { display: flex; justify-content: space-between; margin-bottom: 0.5mm; }
             .ticketItems { width: 100%; margin: 2mm 0; }
-            .itemsHeader { display: flex; justify-content: space-between; font-weight: 950; border-bottom: 0.5pt solid black; padding-bottom: 0.5mm; margin-bottom: 1mm; }
-            .itemRowWrapper { margin-bottom: 1.5mm; padding-bottom: 0.8mm; border-bottom: 0.1pt solid #ddd; }
+            .itemsHeader { display: flex; justify-content: space-between; font-weight: 950; border-bottom: 0.5pt solid black; }
+            .itemRowWrapper { margin-bottom: 1.5mm; border-bottom: 0.1pt solid #ddd; }
             .itemMainLine { display: flex; justify-content: space-between; font-weight: 700; }
-            .itemDetailLine { display: flex; gap: 2mm; font-size: 7pt; font-style: italic; margin-top: 0.2mm; }
-            .giftLabel { font-weight: 900; background: black; color: white; padding: 0 1mm; font-size: 7pt; }
-            .totalsBox { border-top: 0.5pt solid black; padding-top: 1mm; margin-top: 1mm; }
-            .totalLine { display: flex; justify-content: space-between; margin-bottom: 0.5mm; }
-            .totalLineLarge { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 10pt; font-weight: 950; border-top: 1pt solid black; padding-top: 1mm; }
-            .fidelityBox { text-align: center; margin: 3mm 0; border: 0.5pt solid black; padding: 1mm; font-weight: 800; font-size: 8.5pt; }
-            .ticketFooter { text-align: center; margin-top: 4mm; font-size: 7.5pt; line-height: 1.2; }
-            .thankYou { font-weight: 900; font-size: 8.5pt; margin-bottom: 1mm; }
-            .validez { font-size: 7pt; opacity: 0.8; }
+            .itemDetailLine { display: flex; gap: 2mm; font-size: 7pt; font-style: italic; }
+            .giftLabel { font-weight: 900; background: black; color: white; padding: 0 1mm; }
+            .totalsBox { border-top: 0.5pt solid black; padding-top: 1mm; }
+            .totalLine { display: flex; justify-content: space-between; }
+            .totalLineLarge { display: flex; justify-content: space-between; margin-top: 1.5mm; font-size: 10pt; font-weight: 950; border-top: 1pt solid black; }
+            .fidelityBox { text-align: center; margin: 3mm 0; border: 0.5pt solid black; padding: 1mm; font-weight: 800; }
+            .ticketFooter { text-align: center; margin-top: 4mm; font-size: 7.5pt; }
         `;
+
+        const letterCSS = `
+            @page { size: letter; margin: 15mm; }
+            body { margin: 0; font-family: 'Inter', sans-serif; color: #1e293b; background: white; }
+            #printable-ticket { width: 100%; }
+            .letterHeader { display: flex; justify-content: space-between; margin-bottom: 10mm; border-bottom: 2px solid #0f172a; padding-bottom: 5mm; }
+            .companyInfo h1 { margin: 0; font-size: 24pt; color: #0f172a; }
+            .saleInfo { text-align: right; }
+            .notaTitulo { font-size: 18pt; font-weight: 900; color: #4f46e5; }
+            .letterCustomer { margin-bottom: 8mm; background: #f8fafc; padding: 4mm; border-radius: 2mm; }
+            .letterTable { width: 100%; border-collapse: collapse; margin-bottom: 10mm; }
+            .letterTable th { background: #0f172a; color: white; padding: 3mm; text-align: left; }
+            .letterTable td { padding: 3mm; border-bottom: 1px solid #e2e8f0; }
+            .letterFooter { display: flex; justify-content: space-between; margin-top: 15mm; }
+            .signatureBox { text-align: center; width: 60mm; }
+            .signatureLine { border-top: 1px solid #000; margin-bottom: 2mm; }
+            .letterTotals { width: 80mm; }
+            .totalRowLetter { display: flex; justify-content: space-between; padding: 2mm 0; font-size: 12pt; }
+            .totalRowLetter:first-child { border-bottom: 2px solid #0f172a; margin-bottom: 1mm; }
+            .letterDisclaimer { margin-top: 20mm; text-align: center; font-size: 9pt; color: #64748b; font-style: italic; }
+        `;
+
+        const css = printFormat === 'thermal' ? thermalCSS : letterCSS;
         doc.open(); doc.write('<html><head><style>' + css + '</style></head><body>'); doc.write(ticketContent.innerHTML); doc.write('</body></html>'); doc.close();
         iframe.contentWindow.focus();
         setTimeout(() => { iframe.contentWindow.print(); setTimeout(() => document.body.removeChild(iframe), 1000) }, 500);
@@ -279,13 +301,14 @@ export default function POS() {
                             <p>Por favor, contacta a un administrador para que te asigne a una sucursal operativa.</p>
                         </div>
                     ) : products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(product => (
-                        <div key={product.id} className={styles.productCard}>
+                        <div key={product.id} className={styles.productCard} onClick={() => addToCart(product)}>
                             <div className={styles.imageContainer}>
                                 {product.image_url ? <img src={product.image_url} alt={product.name} className={styles.image} /> : <Package className={styles.placeholderIcon} size={64} />}
                                 <div className={styles.overlay}>
-                                    <button className={styles.addButtonOverlay} onClick={() => addToCart(product)}>
-                                        <Plus size={32} />
-                                    </button>
+                                    <div className={styles.addButtonOverlay}>
+                                        <Plus size={28} strokeWidth={3} />
+                                    </div>
+                                    <span className={styles.overlayText}>Agregar al Carrito</span>
                                 </div>
                             </div>
                             <div className={styles.infoBox}>
@@ -360,11 +383,17 @@ export default function POS() {
 
                     <div className={styles.cartItems}>
                         {cart.length === 0 ? (
-                            <p className={styles.emptyCart}>Carrito vacío</p>
+                            <div className={styles.emptyCart}>
+                                <div className={styles.emptyIconContainer}>
+                                    <ShoppingCart size={42} />
+                                </div>
+                                <div className={styles.emptyText}>Carrito Vacío</div>
+                                <div className={styles.emptySubtext}>Selecciona productos del catálogo para comenzar.</div>
+                            </div>
                         ) : (
                             cart.map(item => (
                                 <div key={`${item.id}-${item.isGift}`} className={styles.cartItem}>
-                                    <div className={styles.itemMain}>
+                                    <div className={styles.itemInfo}>
                                         <div className={styles.itemName}>
                                             {item.name}
                                             {item.isGift && <span className={styles.giftLabel}>REGALO</span>}
@@ -375,14 +404,14 @@ export default function POS() {
                                     </div>
                                     <div className={styles.qtyControls}>
                                         <button className={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.isGift, -1)}>
-                                            <Minus size={14} />
+                                            <Minus size={12} />
                                         </button>
                                         <span className={styles.qtyValue}>{item.quantity}</span>
                                         <button className={styles.qtyBtn} onClick={() => updateQuantity(item.id, item.isGift, 1)}>
-                                            <Plus size={14} />
+                                            <Plus size={12} />
                                         </button>
                                         <button className={styles.deleteBtn} onClick={() => removeFromCart(item.id, item.isGift)}>
-                                            <Trash2 size={18} />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
@@ -391,13 +420,17 @@ export default function POS() {
                     </div>
 
                     <div className={styles.cartFooter}>
-                        <div className={styles.totalRow}><span>Total</span><span>{formatCurrency(totalAmount)}</span></div>
+                        <div className={styles.totalRow}>
+                            <span className={styles.totalLabel}>Total a Pagar</span>
+                            <span className={styles.totalVal}>{formatCurrency(totalAmount)}</span>
+                        </div>
                         <button
                             className={styles.checkoutBtn}
                             disabled={loading || cart.length === 0 || (!selectedCustomer && !['admin', 'sucursal', 'cajero'].includes(profile?.role))}
                             onClick={handleCheckout}
                         >
-                            {['admin', 'sucursal', 'cajero'].includes(profile?.role) && !selectedCustomer ? 'Venta Anónima' : 'Finalizar Venta'}
+                            {loading ? <Loader2 className="animate-spin" /> : <Wallet size={18} />}
+                            {['admin', 'sucursal', 'cajero'].includes(profile?.role) && !selectedCustomer ? 'VENTA ANÓNIMA' : 'COBRAR ORDEN'}
                         </button>
                     </div>
                 </div>
@@ -410,8 +443,29 @@ export default function POS() {
                     <div className={styles.ticketModal}>
                         <CheckCircle size={48} color="#10b981" />
                         <h2>¡Venta Exitosa!</h2>
+
+                        <div className={styles.formatSelector}>
+                            <p className={styles.selectorLabel}>Selecciona el formato de impresión:</p>
+                            <div className={styles.formatOptions}>
+                                <button
+                                    className={`${styles.formatOption} ${printFormat === 'letter' ? styles.activeFormat : ''}`}
+                                    onClick={() => setPrintFormat('letter')}
+                                >
+                                    <ShoppingCart size={20} />
+                                    <span>Hoja Carta (Normal)</span>
+                                </button>
+                                <button
+                                    className={`${styles.formatOption} ${printFormat === 'thermal' ? styles.activeFormat : ''}`}
+                                    onClick={() => setPrintFormat('thermal')}
+                                >
+                                    <Printer size={20} />
+                                    <span>Ticket (Térmico)</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <div className={styles.buttonGroup}>
-                            <button onClick={handlePrint} className={styles.printBtn}><Printer size={20} /> Imprimir Ticket</button>
+                            <button onClick={handlePrint} className={styles.printBtn}><Printer size={20} /> Imprimir Comprobante</button>
                             <button onClick={() => setLastSale(null)} className={styles.closeModalBtn}>Cerrar</button>
                         </div>
                     </div>
@@ -419,7 +473,7 @@ export default function POS() {
             )}
 
             <div style={{ display: 'none' }}>
-                {lastSale && <Ticket saleData={lastSale} branchName={profile?.branch_name} sellerName={profile?.full_name} />}
+                {lastSale && <Ticket saleData={lastSale} branchName={profile?.branch_name} sellerName={profile?.full_name} format={printFormat} />}
             </div>
         </div>
     )

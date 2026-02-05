@@ -315,7 +315,81 @@
 }
 
 .hiddenPrintWrapper {
-    display: none;
+    position: fixed;
+    top: -10000px;
+    left: -10000px;
+}
+
+.formatSelectorBox {
+    background: var(--input-bg);
+    padding: 1.5rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.formatOptions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.formatOption {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-dim);
+    text-align: left;
+}
+
+.formatOption:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.activeFormat {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--primary-color);
+    color: var(--text-main);
+}
+
+.formatIcon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activeFormat .formatIcon {
+    background: var(--primary-color);
+    color: white;
+}
+
+.formatText {
+    display: flex;
+    flex-direction: column;
+}
+
+.formatText strong {
+    font-size: 0.95rem;
+}
+
+.formatText span {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+@media (max-width: 600px) {
+    .formatOptions {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media print {

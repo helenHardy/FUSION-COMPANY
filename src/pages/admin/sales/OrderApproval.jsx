@@ -5,7 +5,7 @@ import { useAuth } from '../../../context/AuthContext'
 import Table from '../../../components/ui/Table'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
-import { CheckCircle, XCircle, Eye, ShoppingCart, User, MapPin, Package, Info, Loader2, Sparkles, AlertCircle, Printer } from 'lucide-react'
+import { CheckCircle, XCircle, Eye, ShoppingCart, User, MapPin, Package, Info, Loader2, Sparkles, AlertCircle, Printer, FileText } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../../lib/utils'
 import { Ticket } from '../../shop/Ticket'
 import styles from './OrderApproval.module.css'
@@ -17,7 +17,46 @@ export default function OrderApproval() {
     const [approving, setApproving] = useState(false)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [orderDetails, setOrderDetails] = useState([])
-    const [printingOrder, setPrintingOrder] = useState(null)
+    const [printFormat, setPrintFormat] = useState('thermal')
+
+    const thermalCSS = `
+        @page { size: 58mm auto; margin: 0; }
+        body { margin: 0; padding: 5mm; font-family: 'Courier New', Courier, monospace; background: white; color: black; }
+        .ticketContainer { width: 48mm; margin: 0 auto; }
+        .ticketHeader { text-align: center; margin-bottom: 5mm; border-bottom: 1px dashed #000; padding-bottom: 2mm; }
+        .ticketTitle { font-size: 14pt; font-weight: bold; margin: 0; text-transform: uppercase; }
+        .ticketSubtitle { font-size: 9pt; margin: 1mm 0; }
+        .ticketDivider { border-top: 1px dashed #000; margin: 2mm 0; }
+        .ticketMeta { font-size: 8pt; margin-bottom: 3mm; }
+        .ticketTable { width: 100%; border-collapse: collapse; font-size: 8pt; }
+        .ticketTable th { text-align: left; border-bottom: 1px solid #000; padding-bottom: 1mm; }
+        .ticketTable td { padding: 1mm 0; vertical-align: top; }
+        .ticketTotalSection { margin-top: 3mm; border-top: 1px double #000; padding-top: 2mm; }
+        .totalRow { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; }
+        .pvRow { display: flex; justify-content: space-between; font-size: 8pt; margin-top: 1mm; }
+        .ticketFooter { text-align: center; margin-top: 5mm; font-size: 7pt; font-style: italic; }
+    `;
+
+    const letterCSS = `
+        @page { size: letter; margin: 20mm; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: white; color: #1e293b; padding: 0; }
+        .letterContainer { max-width: 100%; margin: 0 auto; color: #334155; }
+        .letterHeader { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .companyInfo h1 { margin: 0; color: #6366f1; font-size: 24pt; font-weight: 900; }
+        .notaVenta { text-align: right; }
+        .notaVenta h2 { margin: 0; font-size: 18pt; color: #1e293b; }
+        .letterContent { margin-bottom: 2rem; }
+        .clientInfo { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
+        .infoGroup label { display: block; font-size: 8pt; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .letterTable { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+        .letterTable th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 9pt; font-weight: 800; border-bottom: 1px solid #e2e8f0; }
+        .letterTable td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 10pt; }
+        .letterTotals { margin-left: auto; width: 250px; background: #f8fafc; padding: 1rem; border-radius: 12px; }
+        .totalLine { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .totalMain { font-weight: 900; color: #6366f1; font-size: 14pt; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 8px; }
+        .signatureArea { margin-top: 4rem; display: flex; justify-content: center; }
+        .signBox { width: 250px; border-top: 1px solid #94a3b8; text-align: center; padding-top: 8px; font-size: 9pt; color: #64748b; }
+    `;
 
     useEffect(() => {
         fetchOrders()
@@ -109,7 +148,6 @@ export default function OrderApproval() {
 
     const handlePrint = async (order) => {
         try {
-            // Need to fetch details if not already loaded
             let items = []
             if (selectedOrder && selectedOrder.id === order.id && orderDetails.length > 0) {
                 items = orderDetails
@@ -122,7 +160,6 @@ export default function OrderApproval() {
                 items = data
             }
 
-            // Format for Ticket
             const saleData = {
                 items: items.map(i => ({
                     quantity: i.quantity,
@@ -139,16 +176,52 @@ export default function OrderApproval() {
                 }
             }
 
-            setPrintingOrder({
-                saleData,
-                branchName: order.sucursales?.name || 'CENTRAL',
-                sellerName: 'ADMIN'
-            })
+            // Create temporary iframe for printing
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
 
-            setTimeout(() => {
-                window.print()
-                // setPrintingOrder(null) // Optional: Keep it or clear it. Clearing might remove it from DOM too fast if not handling print events.
-            }, 500)
+            const doc = iframe.contentWindow.document;
+
+            // Simple render function since we can't easily use React inside iframe's doc.write without complex setup
+            // Instead we use the state-of-the-art approach: render to a hidden div and clone its innerHTML
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            document.body.appendChild(tempDiv);
+
+            // Logic to get the rendered HTML of the Ticket component
+            // Since we can't easily do that here, we'll use the hidden element approach
+            // Set the printing status so hidden div populates
+            const ticketElement = document.getElementById('printable-ticket-approval');
+            if (ticketElement) {
+                const css = printFormat === 'thermal' ? thermalCSS : letterCSS;
+                doc.open();
+                doc.write(`
+                    <html>
+                        <head>
+                            <title>Imprimir Comprobante</title>
+                            <style>${css}</style>
+                        </head>
+                        <body>
+                            ${ticketElement.innerHTML}
+                        </body>
+                    </html>
+                `);
+                doc.close();
+
+                iframe.contentWindow.focus();
+                setTimeout(() => {
+                    iframe.contentWindow.print();
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 500);
+            }
 
         } catch (err) {
             console.error("Error al imprimir:", err)
@@ -252,6 +325,37 @@ export default function OrderApproval() {
                             </div>
                         </div>
 
+                        {/* Format Selection UI */}
+                        <div className={styles.formatSelectorBox}>
+                            <h4 className={styles.sectionTitle}>Formato de Impresión</h4>
+                            <div className={styles.formatOptions}>
+                                <button
+                                    className={`${styles.formatOption} ${printFormat === 'letter' ? styles.activeFormat : ''}`}
+                                    onClick={() => setPrintFormat('letter')}
+                                >
+                                    <div className={styles.formatIcon}>
+                                        <FileText size={20} />
+                                    </div>
+                                    <div className={styles.formatText}>
+                                        <strong>Hoja Carta</strong>
+                                        <span>Normal (Nota Venta)</span>
+                                    </div>
+                                </button>
+                                <button
+                                    className={`${styles.formatOption} ${printFormat === 'thermal' ? styles.activeFormat : ''}`}
+                                    onClick={() => setPrintFormat('thermal')}
+                                >
+                                    <div className={styles.formatIcon}>
+                                        <Printer size={20} />
+                                    </div>
+                                    <div className={styles.formatText}>
+                                        <strong>Ticket térmico</strong>
+                                        <span>Simplificado (58mm)</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
                         <div className={styles.itemsList}>
                             <h4 className={styles.sectionTitle}>Productos en Pedido</h4>
                             {orderDetails.map(item => (
@@ -299,14 +403,27 @@ export default function OrderApproval() {
 
             {/* Hidden Ticket for Printing */}
             <div className={styles.hiddenPrintWrapper}>
-                <div className={styles.printArea}>
-                    {printingOrder && (
-                        <Ticket
-                            saleData={printingOrder.saleData}
-                            branchName={printingOrder.branchName}
-                            sellerName={printingOrder.sellerName}
-                        />
-                    )}
+                <div id="printable-ticket-approval">
+                    <Ticket
+                        saleData={selectedOrder ? {
+                            items: orderDetails.map(i => ({
+                                quantity: i.quantity,
+                                name: i.products?.name,
+                                price: i.price_at_sale,
+                                isGift: i.price_at_sale === 0
+                            })),
+                            total: selectedOrder.total_amount,
+                            totalPV: selectedOrder.total_pv,
+                            date: selectedOrder.created_at,
+                            customer: {
+                                full_name: selectedOrder.profiles?.full_name,
+                                document_id: selectedOrder.profiles?.document_id
+                            }
+                        } : null}
+                        branchName={selectedOrder?.sucursales?.name || 'CENTRAL'}
+                        sellerName="ADMIN"
+                        format={printFormat}
+                    />
                 </div>
             </div>
         </div>
