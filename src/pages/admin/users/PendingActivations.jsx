@@ -197,6 +197,6 @@ export default function PendingActivations() {
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     )
 }
