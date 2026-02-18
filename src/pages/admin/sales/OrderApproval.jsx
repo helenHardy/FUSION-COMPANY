@@ -5,7 +5,7 @@ import { useAuth } from '../../../context/AuthContext'
 import Table from '../../../components/ui/Table'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
-import { CheckCircle, XCircle, Eye, ShoppingCart, User, MapPin, Package, Info, Loader2, Sparkles, AlertCircle, Printer, FileText } from 'lucide-react'
+import { CheckCircle, XCircle, Eye, ShoppingCart, User, MapPin, Package, Info, Loader2, Sparkles, AlertCircle, Printer, FileText, Trash2 } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../../lib/utils'
 import { Ticket } from '../../shop/Ticket'
 import styles from './OrderApproval.module.css'
@@ -143,6 +143,24 @@ export default function OrderApproval() {
             fetchOrders()
         } catch (error) {
             alert(error.message)
+        }
+    }
+
+    const handleDelete = async (orderId) => {
+        if (!confirm('¿Estás seguro de que deseas ELIMINAR este pedido permanentemente? Esta acción no se puede deshacer.')) return
+
+        try {
+            const { error } = await supabase.rpc('delete_order_safely', {
+                p_sale_id: orderId
+            })
+
+            if (error) throw error
+
+            alert('Pedido eliminado correctamente.')
+            setSelectedOrder(null)
+            fetchOrders()
+        } catch (error) {
+            alert(`Error al eliminar: ${error.message}`)
         }
     }
 
@@ -287,6 +305,9 @@ export default function OrderApproval() {
                                     <button onClick={() => handleApprove(order.id)} className={styles.approveBtn}>
                                         <CheckCircle size={16} />
                                     </button>
+                                    <button onClick={() => handleDelete(order.id)} className={styles.viewBtn} style={{ background: '#ef4444', color: 'white' }} title="Eliminar definitivamente">
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -385,7 +406,10 @@ export default function OrderApproval() {
 
                         <div className={styles.modalActions}>
                             <button onClick={() => handleReject(selectedOrder.id)} className={styles.rejectBtn} disabled={approving}>
-                                <XCircle size={20} /> Rechazar Pedido
+                                <XCircle size={20} /> Rechazar
+                            </button>
+                            <button onClick={() => handleDelete(selectedOrder.id)} className={styles.rejectBtn} style={{ background: '#ef4444' }} disabled={approving}>
+                                <Trash2 size={20} /> Eliminar
                             </button>
                             <button onClick={() => handleApprove(selectedOrder.id)} className={styles.approveFullBtn} disabled={approving}>
                                 {approving ? (
