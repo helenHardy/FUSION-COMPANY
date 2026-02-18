@@ -19,6 +19,7 @@ export default function RanksConfig() {
         min_pv_monthly: 0,
         min_active_directs: 0,
         order_index: 0,
+        personal_bonus_percentage: 0,
         royalties_config: {},
         reward_description: '',
         structure_requirements: []
@@ -62,6 +63,7 @@ export default function RanksConfig() {
             min_pv_monthly: 0,
             min_active_directs: 0,
             order_index: ranks.length + 1,
+            personal_bonus_percentage: 0,
             royalties_config: {},
             reward_description: '',
             structure_requirements: []
@@ -84,6 +86,7 @@ export default function RanksConfig() {
                     min_pv_monthly: parseFloat(formData.min_pv_monthly),
                     min_active_directs: parseInt(formData.min_active_directs),
                     order_index: parseInt(formData.order_index),
+                    personal_bonus_percentage: parseFloat(formData.personal_bonus_percentage) || 0,
                     royalties_config: formData.royalties_config,
                     reward_description: formData.reward_description,
                     structure_requirements: formData.structure_requirements
@@ -256,6 +259,13 @@ export default function RanksConfig() {
                             <div className={styles.inputGroup}>
                                 <label className={styles.label}>PVG Grupal de Red</label>
                                 <input type="number" className="input" value={formData.min_pvg} onChange={e => setFormData({ ...formData, min_pvg: e.target.value })} />
+                            </div>
+                            <div className={styles.inputGroup}>
+                                <label className={styles.label} style={{ color: '#10b981' }}>% Bono Personal (Cashback)</label>
+                                <div style={{ position: 'relative' }}>
+                                    <input type="number" step="0.1" className="input" value={formData.personal_bonus_percentage} onChange={e => setFormData({ ...formData, personal_bonus_percentage: e.target.value })} />
+                                    <span style={{ position: 'absolute', right: '14px', top: '15px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>%</span>
+                                </div>
                             </div>
                         </section>
 

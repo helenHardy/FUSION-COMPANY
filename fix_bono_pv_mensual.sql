@@ -117,50 +117,109 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 5. FUNCIÓN DE CIERRE MENSUAL (SNAPSHOT Y RESET)
+-- 5. FUNCIÓN DE CIERRE MENSUAL CONSOLIDADO (SNAPSHOT Y RESET)
 CREATE OR REPLACE FUNCTION public.execute_monthly_closing()
-RETURNS JSONB AS $$
+RETURNS JSONB 
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
-    v_percent NUMERIC;
+    v_percent_personal NUMERIC;
     v_month INTEGER;
     v_year INTEGER;
     v_count INTEGER := 0;
+    v_user RECORD;
+    v_total_bonus NUMERIC;
+    v_personal_bonus NUMERIC;
+    v_royalties_total NUMERIC;
+    v_rank_record RECORD;
+    v_milestone RECORD;
+    v_percentage NUMERIC;
+    v_setting_val TEXT;
 BEGIN
-    -- Obtener porcentaje configurado (default 15 si no existe)
-    SELECT COALESCE(value::NUMERIC, 15) INTO v_percent FROM public.system_settings WHERE key = 'monthly_pv_bonus_percent';
+    -- A. Obtener configuración del bono personal
+    SELECT value INTO v_setting_val FROM system_settings WHERE key = 'monthly_pv_bonus_percent';
+    v_percent_personal := COALESCE(v_setting_val::NUMERIC, 15);
     
-    -- Determinar el periodo (Mes actual)
+    -- B. Determinar periodo
     v_month := EXTRACT(MONTH FROM NOW())::INTEGER;
     v_year := EXTRACT(YEAR FROM NOW())::INTEGER;
 
-    -- 1. Snapshot de bonos para usuarios con PV > 0
-    INSERT INTO public.user_monthly_bonuses (user_id, period_month, period_year, pv_amount, percentage, bonus_amount)
-    SELECT 
-        id, 
-        v_month, 
-        v_year, 
-        monthly_pv, 
-        v_percent, 
-        (monthly_pv * v_percent / 100)
-    FROM public.profiles
-    WHERE monthly_pv > 0
-    ON CONFLICT (user_id, period_month, period_year) DO NOTHING;
-    
-    GET DIAGNOSTICS v_count = ROW_COUNT;
+    -- C. Procesar cada usuario que tuvo actividad este mes
+    -- Recorremos perfiles que sumaron puntos o volumen grupal este mes
+    FOR v_user IN 
+        SELECT p.*, r.royalties_config 
+        FROM profiles p
+        LEFT JOIN ranks r ON LOWER(TRIM(p.current_rank)) = LOWER(TRIM(r.name))
+        WHERE p.monthly_pv > 0 OR p.monthly_pvg > 0
+    LOOP
+        v_royalties_total := 0;
 
-    -- 2. Reiniciar contadores del mes
+        -- 1. Calcular tamaño de la red para requisitos de metas
+        WITH RECURSIVE downline AS (
+            SELECT id FROM public.profiles WHERE sponsor_id = v_user.id
+            UNION ALL
+            SELECT p.id FROM public.profiles p JOIN downline d ON p.sponsor_id = d.id
+        )
+        SELECT COUNT(*)::INTEGER INTO v_count FROM downline; -- Reutilizamos v_count temporalmente para red
+
+        -- 2. Calcular Bono PV Personal (Personal %)
+        IF v_user.monthly_pv > 0 THEN
+            v_personal_bonus := (v_user.monthly_pv * v_percent_personal / 100.0);
+        END IF;
+
+        -- 3. Calcular Regalías por Metas alcanzadas (Niveles) usando PVG MENSUAL
+        IF v_user.royalties_config IS NOT NULL AND v_user.royalties_config != '{}'::jsonb THEN
+            FOR v_milestone IN SELECT * FROM royalty_milestones ORDER BY level_number ASC LOOP
+                -- ¿Cumple requisitos de la meta? (Gente + PVG + PV)
+                IF v_count >= v_milestone.min_people AND
+                   v_user.monthly_pvg >= v_milestone.min_pvg AND 
+                   v_user.monthly_pv >= v_milestone.min_monthly_pv THEN
+                   
+                    -- Buscar porcentaje para este nivel en su rango
+                    v_percentage := COALESCE((v_user.royalties_config->>( 'N' || v_milestone.level_number ))::NUMERIC, 0);
+                   
+                    IF v_percentage > 0 THEN
+                        v_royalties_total := v_royalties_total + (v_user.monthly_pvg * v_percentage / 100.0);
+                    END IF;
+                END IF;
+            END LOOP;
+        END IF;
+
+        v_total_bonus := v_personal_bonus + v_royalties_total;
+
+        -- 3. Si hay bono, registrarlo en la tabla histórica
+        IF v_total_bonus > 0 THEN
+            INSERT INTO public.user_monthly_bonuses (
+                user_id, period_month, period_year, pv_amount, 
+                percentage, bonus_amount, created_at
+            ) VALUES (
+                v_user.id, v_month, v_year, v_user.monthly_pv, 
+                v_percent_personal, v_total_bonus, NOW()
+            )
+            ON CONFLICT (user_id, period_month, period_year) 
+            DO UPDATE SET bonus_amount = EXCLUDED.bonus_amount;
+            
+            v_count := v_count + 1;
+        END IF;
+    END LOOP;
+
+    -- D. REINICIO DE CONTADORES MENSUALES (Vital para el siguiente mes)
     UPDATE public.profiles
     SET monthly_pv = 0,
+        monthly_pvg = 0,
         active_directs_count = 0;
 
     RETURN jsonb_build_object(
         'success', true, 
         'processed_users', v_count, 
-        'period', v_month || '/' || v_year,
-        'closing_at', NOW()
+        'period', v_month::text || '/' || v_year::text,
+        'action', 'cierre_consolidado_mensual',
+        'at', NOW()
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- 6. SEGURIDAD RLS
 ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;

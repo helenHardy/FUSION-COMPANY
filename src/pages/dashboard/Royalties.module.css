@@ -71,72 +71,103 @@
 }
 
 /* Banner Card */
-.banner {
-    background: var(--fusion-gradient);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
+.overhauledHero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 3rem;
     margin-bottom: 2.5rem;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 2rem;
-    color: white;
+    gap: 3rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
-.bannerIcon {
-    width: 72px;
-    height: 72px;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
+.heroMain {
+    flex: 2;
+}
+
+.heroTotalLabel {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.heroTotalValue {
+    font-size: 5rem;
+    font-weight: 950;
+    color: #10b981;
+    line-height: 1;
+    margin-bottom: 2rem;
+    font-family: 'Outfit', sans-serif;
+    text-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+}
+
+.heroSubstats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.heroSubstat {
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: white;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    gap: 12px;
 }
 
-.bannerContent {
+.substatLabel {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.substatValue {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.heroSide {
     flex: 1;
-    position: relative;
-    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-left: 3rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.bannerTitle {
-    font-size: 1.6rem;
+.sideStat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sideStatLabel {
+    font-size: 0.8rem;
     font-weight: 800;
-    margin: 0;
-    font-family: 'Outfit', sans-serif;
-}
-
-.bannerSubtitle {
-    margin-top: 6px;
-    opacity: 0.9;
-    font-size: 1rem;
-    max-width: 600px;
-}
-
-.bannerValueBox {
-    text-align: right;
-    position: relative;
-    z-index: 2;
-}
-
-.bannerLabel {
-    font-size: 0.75rem;
-    font-weight: 800;
-    opacity: 0.8;
+    color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 4px;
+    letter-spacing: 1px;
 }
 
-.bannerValue {
-    font-size: 3rem;
-    font-weight: 950;
-    line-height: 1;
+.sideStatValue {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+/* Old styles to remove or keep as legacy if needed */
+.banner {
+    display: none;
+}
+
+.monthlyHero {
+    display: none;
 }
 
 /* Royalty Level Cards */
@@ -169,6 +200,18 @@
 .levelCardUnlocked {
     border-color: #10b981;
     background: rgba(16, 185, 129, 0.03);
+}
+
+.levelCardRankLocked {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.2);
+    filter: grayscale(0.5);
+    border-style: dashed;
+}
+
+.levelCardRankLocked:hover {
+    transform: none;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .levelNumberBox {
@@ -232,14 +275,63 @@
 .payoutPercentage {
     font-size: 0.75rem;
     font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.incentiveLabel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.incentiveSub {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    font-weight: 400;
+}
+
+.rankStatusLabel {
+    color: var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.payoutCalculation {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.calcValue {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+}
+
+.calcOp {
+    font-size: 1rem;
     color: var(--text-dim);
-    margin-bottom: 4px;
+    font-weight: 900;
+}
+
+.calculationDisplay {
+    display: none;
+    /* Deprecated */
 }
 
 .payoutAmount {
-    font-size: 1.3rem;
-    font-weight: 900;
+    font-size: 1.5rem;
+    font-weight: 950;
     color: #10b981;
+    font-family: 'Outfit', sans-serif;
 }
 
 /* Monthly Bonus Header */
@@ -360,6 +452,12 @@
     background: rgba(255, 255, 255, 0.03);
     color: var(--text-dim);
     border-color: var(--border-color);
+}
+
+.badgeRankLocked {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.2);
 }
 
 /* Info Box */

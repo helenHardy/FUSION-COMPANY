@@ -29,14 +29,23 @@ import OrderApproval from './pages/admin/sales/OrderApproval'
 import RewardsManager from './pages/admin/finances/RewardsManager'
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { user, profile, loading, signOut } = useAuth()
+
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
       <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
+
   if (!user) return <Navigate to="/login" />
+
+  // Bloqueo de usuarios inactivos o pendientes (excepto administradores)
+  if (profile && profile.status !== 'activo' && profile.role !== 'admin') {
+    signOut() // Opcional: limpiar sesión local
+    return <Navigate to="/login" replace />
+  }
+
   return children
 }
 

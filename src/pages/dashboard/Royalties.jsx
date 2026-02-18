@@ -77,6 +77,35 @@ export default function Royalties() {
         setClaiming(false)
     }
 
+    const handleClaimAllMonthly = async () => {
+        const unclaimedCount = monthlyBonuses.filter(b => !b.is_claimed).length
+        if (unclaimedCount === 0) {
+            alert("No tienes bonos pendientes por cobrar.")
+            return
+        }
+
+        if (!confirm(`¿Deseas cobrar los ${unclaimedCount} bonos pendientes?`)) return
+
+        setClaiming(true)
+        try {
+            const { data, error } = await supabase.rpc('claim_all_pending_bonuses', { p_user_id: profile.id })
+
+            if (error) throw error
+
+            if (data?.success) {
+                alert(data.message || `¡Se han cobrado ${data.processed_count} bonos!`)
+                fetchMonthlyBonuses()
+            } else {
+                alert(data?.message || 'Error al cobrar los bonos')
+            }
+        } catch (err) {
+            console.error("Error al cobrar todo:", err)
+            alert("Ocurrió un error al procesar el cobro masivo.")
+        } finally {
+            setClaiming(false)
+        }
+    }
+
     const handleClaim = async (level) => {
         if (!confirm(`¿Estás seguro de cobrar el Bono de Nivel ${level}? \nEsta acción cerrará este nivel definitivamente con el PVG acumulado actual.`)) return
 
@@ -100,7 +129,27 @@ export default function Royalties() {
         )
     }
 
-    const currentMonthPotential = (profile?.monthly_pv || 0) * (parseFloat(systemSettings.monthly_pv_bonus_percent) / 100)
+    const rankPersonalBonus = status?.[0]?.rank_personal_bonus || 0
+    const finalPercent = rankPersonalBonus > 0 ? rankPersonalBonus : (parseFloat(systemSettings.monthly_pv_bonus_percent) || 0)
+
+    // Cálculo de bono potencial personal
+    const personalPotential = (profile?.monthly_pv || 0) * (finalPercent / 100)
+
+    // Cálculo de bono potencial por niveles (Regalías)
+    // Sumamos niveles donde se cumplen los requisitos de trabajo (Gente, PVG, PV)
+    const levelsPotential = status.reduce((acc, item) => {
+        const isWorkQualified = item.current_people >= item.min_people &&
+            item.current_pvg >= item.min_pvg &&
+            item.current_monthly_pv >= item.min_monthly_pv;
+
+        if (isWorkQualified && !item.is_claimed) {
+            const percentage = item.rank_percentage > 0 ? item.rank_percentage : (item.max_percentage || 0);
+            return acc + ((item.current_pvg * percentage) / 100);
+        }
+        return acc;
+    }, 0)
+
+    const totalPotential = personalPotential + levelsPotential
 
     return (
         <div className={styles.container}>
@@ -121,39 +170,54 @@ export default function Royalties() {
                         onClick={() => setActiveTab('monthly')}
                         className={`${styles.tab} ${activeTab === 'monthly' ? styles.activeTab : ''}`}
                     >
-                        Bono PV Mensual
+                        Historial
                     </button>
                 </div>
             </header>
 
             {activeTab === 'royalties' ? (
                 <>
-                    {/* Premium Rank Banner */}
-                    <div className={styles.banner}>
-                        <div className={styles.bannerIcon}>
-                            <Crown size={36} />
+                    {/* New Overhauled Hero Section */}
+                    <div className={styles.overhauledHero}>
+                        <div className={styles.heroMain}>
+                            <div className={styles.heroTotalLabel}>Bono total generado este mes</div>
+                            <div className={styles.heroTotalValue}>{formatCurrency(totalPotential)}</div>
+                            <div className={styles.heroSubstats}>
+                                <div className={styles.heroSubstat}>
+                                    <span className={styles.substatLabel}>Bono Personal:</span>
+                                    <span className={styles.substatValue}>{formatCurrency(personalPotential)}</span>
+                                </div>
+                                <div className={styles.heroSubstat}>
+                                    <span className={styles.substatLabel}>Bono Regalías:</span>
+                                    <span className={styles.substatValue}>{formatCurrency(levelsPotential)}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className={styles.bannerContent}>
-                            <h3 className={styles.bannerTitle}>Estatus Actual: {profile?.current_rank}</h3>
-                            <p className={styles.bannerSubtitle}>
-                                Desbloquea bonos únicos por cada nivel de tu red al alcanzar los hitos de PVG y personas requeridos.
-                            </p>
-                        </div>
-                        <div className={styles.bannerValueBox}>
-                            <div className={styles.bannerLabel}>Tu PVG Unificado</div>
-                            <div className={styles.bannerValue}>{profile?.pvg || 0}</div>
+                        <div className={styles.heroSide}>
+                            <div className={styles.sideStat}>
+                                <div className={styles.sideStatLabel}>Actividad Personal</div>
+                                <div className={styles.sideStatValue}>{profile?.monthly_pv || 0} PV</div>
+                            </div>
+                            <div className={styles.sideStat}>
+                                <div className={styles.sideStatLabel}>Puntos Grupales (PVG)</div>
+                                <div className={styles.sideStatValue}>{profile?.monthly_pvg || 0} PVG</div>
+                            </div>
+                            <div className={styles.sideStat}>
+                                <div className={styles.sideStatLabel}>Tasa Retorno</div>
+                                <div className={styles.sideStatValue} style={{ color: '#10b981' }}>{finalPercent}%</div>
+                            </div>
                         </div>
                     </div>
 
                     <div className={styles.levelsContainer}>
                         {status.map((item) => {
-                            const percentage = rankInfo?.royalties_config?.[`N${item.level_number}`] || 0
+                            const percentage = item.rank_percentage || 0
                             const potentialPayout = (item.current_pvg * percentage) / 100
-                            const isClaimed = item.is_claimed
-                            const isUnlocked = item.is_unlocked && !isClaimed
+                            const isUnlocked = item.is_unlocked // Evaluamos si califica este mes
+                            const isRankLocked = percentage <= 0
 
                             return (
-                                <div key={item.level_number} className={`${styles.levelCard} glass ${isClaimed ? styles.levelCardClaimed : ''} ${isUnlocked ? styles.levelCardUnlocked : ''}`}>
+                                <div key={item.level_number} className={`${styles.levelCard} glass ${isUnlocked ? styles.levelCardUnlocked : ''} ${isRankLocked ? styles.levelCardRankLocked : ''}`}>
                                     {/* Nivel */}
                                     <div className={styles.levelNumberBox}>
                                         <div className={styles.levelNumberLabel}>Nivel</div>
@@ -177,7 +241,7 @@ export default function Royalties() {
                                     {/* PVG Progress */}
                                     <div className={styles.progressGroup}>
                                         <div className={styles.progressHeader}>
-                                            <span className={styles.progressIconText}><TrendingUp size={14} /> PVG</span>
+                                            <span className={styles.progressIconText}><TrendingUp size={14} /> PVG Mensual</span>
                                             <span>{item.current_pvg} / {item.min_pvg}</span>
                                         </div>
                                         <div className={styles.progressBarContainer}>
@@ -204,28 +268,63 @@ export default function Royalties() {
 
                                     {/* Potential Payout */}
                                     <div className={styles.payoutSection}>
-                                        <div className={styles.payoutPercentage}>{percentage}% de Comisión</div>
-                                        <div className={styles.payoutAmount}>{formatCurrency(potentialPayout)}</div>
+                                        <div className={styles.payoutPercentage}>
+                                            {isRankLocked
+                                                ? <div className={styles.incentiveLabel} style={{ color: '#f59e0b', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                    {(!item.debug_user_rank || item.debug_user_rank === 'SIN RANGO' || (typeof item.debug_user_rank === 'string' && item.debug_user_rank.trim() === '')) ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            <div style={{ background: '#dc2626', color: 'white', padding: '6px 12px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                                                                ⚠️ RANGO VACÍO EN PERFIL
+                                                            </div>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const { error } = await supabase.from('profiles').update({ current_rank: 'PERSONAL' }).eq('id', profile.id);
+                                                                    if (error) alert("Error: " + error.message);
+                                                                    else { alert("¡Rango Reparado! Sincronizando..."); window.location.reload(); }
+                                                                }}
+                                                                style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem' }}
+                                                            >
+                                                                🔄 REPARAR MI RANGO AHORA
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ fontWeight: 800 }}>Rango: {item.debug_user_rank}</span>
+                                                    )}
+
+                                                    <span className={styles.incentiveSub} style={{ marginTop: '8px' }}>
+                                                        {item.debug_system_rank === 'NO ENCONTRADO'
+                                                            ? `🚫 No existe configuración para "${item.debug_user_rank}"`
+                                                            : `Nivel bloqueado para este rango`}
+                                                    </span>
+                                                </div>
+                                                : <div className={styles.rankStatusLabel}>
+                                                    <Crown size={14} /> Rango {item.debug_system_rank}: <strong>{percentage}%</strong>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div className={styles.payoutCalculation} title={`Config: ${item.debug_config_raw}`}>
+                                            <div className={styles.calcValue}>{item.current_pvg} PVG</div>
+                                            <div className={styles.calcOp}>×</div>
+                                            <div className={styles.calcValue}>{percentage || Number(item.max_percentage || 0)}%</div>
+                                        </div>
+                                        <div className={styles.payoutAmount} style={{ opacity: isRankLocked ? 0.3 : 1 }}>
+                                            = {formatCurrency(isRankLocked ? (item.current_pvg * (item.max_percentage || 0) / 100) : potentialPayout)}
+                                        </div>
                                     </div>
 
-                                    {/* Claim Action */}
-                                    <div style={{ textAlign: 'right' }}>
-                                        {isClaimed ? (
-                                            <div className={`${styles.badge} ${styles.badgeClaimed}`}>
-                                                <CheckCircle2 size={16} /> COBRADO
+                                    {/* Status Action */}
+                                    <div style={{ textAlign: 'center' }}>
+                                        {isRankLocked ? (
+                                            <div className={`${styles.badge} ${styles.badgeLocked}`} style={{ opacity: 0.7, fontSize: '0.8rem' }}>
+                                                <Trophy size={14} /> BLOQUEADO POR RANGO
                                             </div>
                                         ) : isUnlocked ? (
-                                            <button
-                                                disabled={claiming || percentage <= 0}
-                                                onClick={() => handleClaim(item.level_number)}
-                                                className="button"
-                                                style={{ width: '100%', padding: '0.75rem' }}
-                                            >
-                                                {percentage > 0 ? (claiming ? 'COBRANDO...' : 'COBRAR BONO') : 'RANGO INSUF.'}
-                                            </button>
+                                            <div className={`${styles.badge} ${styles.badgeUnlocked}`} style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', border: '1px solid #10b981' }}>
+                                                <CheckCircle2 size={16} /> CALIFICADO PARA CIERRE
+                                            </div>
                                         ) : (
                                             <div className={`${styles.badge} ${styles.badgeLocked}`}>
-                                                <Lock size={16} /> BLOQUEADO
+                                                <Lock size={16} /> PROGRESO EN CURSO
                                             </div>
                                         )}
                                     </div>
@@ -236,23 +335,20 @@ export default function Royalties() {
                 </>
             ) : (
                 <>
-                    {/* Monthly PV Bonus Hero */}
-                    <div className={styles.monthlyHero}>
-                        <div>
-                            <div className={styles.monthlyLabel}>Actividad Mes Actual</div>
-                            <h2 className={styles.monthlyValue}>{profile?.monthly_pv || 0} PV</h2>
-                            <p className={styles.monthlyPotential}>
-                                Has generado un bono potencial de <b style={{ color: '#10b981' }}>{formatCurrency(currentMonthPotential)}</b> este mes.
-                            </p>
+                    <h3 className={styles.sectionTitle} style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Trophy size={22} color="var(--primary-color)" /> Historial de Bonos de Activación
                         </div>
-                        <div className={styles.percentBox}>
-                            <div className={styles.percentLabel}>Tasa de Retorno</div>
-                            <div className={styles.percentValue}>{systemSettings.monthly_pv_bonus_percent}%</div>
-                        </div>
-                    </div>
-
-                    <h3 className={styles.sectionTitle} style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Trophy size={22} color="var(--primary-color)" /> Historial de Bonos de Activación
+                        {monthlyBonuses.some(b => !b.is_claimed) && (
+                            <button
+                                onClick={handleClaimAllMonthly}
+                                disabled={claiming}
+                                className="button"
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: '#10b981' }}
+                            >
+                                {claiming ? 'COBRANDO...' : 'COBRAR TODO EL HISTORIAL'}
+                            </button>
+                        )}
                     </h3>
 
                     <div className={styles.levelsContainer}>

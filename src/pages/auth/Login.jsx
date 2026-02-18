@@ -35,7 +35,7 @@ export default function Login() {
             loginEmail = resolvedEmail
         }
 
-        const { error: authError } = await supabase.auth.signInWithPassword({
+        const { data: { user: authedUser }, error: authError } = await supabase.auth.signInWithPassword({
             email: loginEmail,
             password,
         })
@@ -44,7 +44,20 @@ export default function Login() {
             setError('Credenciales inválidas. Por favor verifique sus datos.')
             setLoading(false)
         } else {
-            navigate('/')
+            // Verificar estatus del perfil antes de permitir la entrada
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('status, role')
+                .eq('id', authedUser.id)
+                .single()
+
+            if (profile && profile.status !== 'activo' && profile.role !== 'admin') {
+                await supabase.auth.signOut()
+                setError('Su cuenta está pendiente de activación o ha sido desactivada. Por favor, contacte con su patrocinador o administración.')
+                setLoading(false)
+            } else {
+                navigate('/')
+            }
         }
     }
 

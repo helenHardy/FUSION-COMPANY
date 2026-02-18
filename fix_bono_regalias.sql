@@ -52,10 +52,17 @@ DECLARE
     v_total_downline INTEGER := 0;
     v_result JSONB;
 BEGIN
-    -- 1. Obtener datos del perfil (con manejo de nulos)
-    SELECT * INTO v_profile FROM public.profiles WHERE id = p_user_id;
+    -- 1. Obtener datos del perfil y su rango (robusto)
+    SELECT 
+        p.id, p.monthly_pv, p.monthly_pvg, p.current_rank,
+        r.royalties_config as rank_config,
+        r.name as matched_rank_name
+    INTO v_profile 
+    FROM public.profiles p
+    LEFT JOIN public.ranks r ON LOWER(TRIM(p.current_rank)) = LOWER(TRIM(r.name))
+    WHERE p.id = p_user_id;
     
-    IF v_profile IS NULL THEN
+    IF v_profile.id IS NULL THEN
         RETURN '[]'::jsonb;
     END IF;
 
@@ -76,12 +83,17 @@ BEGIN
             'min_pvg', rm.min_pvg,
             'min_monthly_pv', rm.min_monthly_pv,
             'current_people', v_total_downline,
-            'current_pvg', COALESCE(v_profile.pvg, 0),
+            'current_pvg', COALESCE(v_profile.monthly_pvg, 0),
             'current_monthly_pv', COALESCE(v_profile.monthly_pv, 0),
+            'rank_percentage', COALESCE((v_profile.rank_config->>( 'N' || rm.level_number ))::NUMERIC, 0),
+            'max_percentage', COALESCE((SELECT MAX((royalties_config->>( 'N' || rm.level_number ))::NUMERIC) FROM public.ranks), 0),
+            'debug_rank', v_profile.current_rank,
+            'debug_matched', v_profile.matched_rank_name,
             'is_unlocked', (
                 v_total_downline >= rm.min_people 
-                AND COALESCE(v_profile.pvg, 0) >= rm.min_pvg
+                AND COALESCE(v_profile.monthly_pvg, 0) >= rm.min_pvg
                 AND COALESCE(v_profile.monthly_pv, 0) >= rm.min_monthly_pv
+                AND COALESCE((v_profile.royalties_config->>( 'N' || rm.level_number ))::NUMERIC, 0) > 0
             ),
             'is_claimed', EXISTS (SELECT 1 FROM public.user_royalty_claims urc WHERE urc.user_id = p_user_id AND urc.level_number = rm.level_number),
             'claimed_at', (SELECT claimed_at FROM public.user_royalty_claims urc WHERE urc.user_id = p_user_id AND urc.level_number = rm.level_number)

@@ -236,7 +236,7 @@ export default function RoyaltiesConfig() {
                         </div>
                     </div>
                     <div className={styles.inputGroup}>
-                        <label className={styles.label}>Mín. PVG (Grupal)</label>
+                        <label className={styles.label}>Mín. PVG Mensual (Grupal)</label>
                         <div className={styles.relative}>
                             <TrendingUp size={16} className={styles.percentIcon} style={{ left: '14px', right: 'auto' }} />
                             <input
@@ -305,7 +305,7 @@ export default function RoyaltiesConfig() {
                             <td className={styles.td}>
                                 <div className={styles.milestoneValue}>
                                     <TrendingUp size={12} style={{ marginRight: '6px', opacity: 0.5 }} />
-                                    <span className={styles.highlightValue}>{m.min_pvg.toLocaleString()}</span> PV Grupal
+                                    <span className={styles.highlightValue}>{m.min_pvg.toLocaleString()}</span> PVG Mes
                                 </div>
                             </td>
                             <td className={styles.td}>

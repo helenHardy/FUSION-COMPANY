@@ -8,6 +8,7 @@ BEGIN
     -- Solo reiniciamos los campos temporales del mes
     UPDATE public.profiles
     SET monthly_pv = 0,
+        monthly_pvg = 0, -- Reset de volumen grupal mensual
         active_directs_count = 0;
     
     -- Nota: El PV total (acumulado para rango) NO se reinicia.

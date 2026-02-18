@@ -20,7 +20,7 @@ DECLARE
     v_user_record RECORD;
 BEGIN
     SELECT * INTO v_user_record FROM public.profiles WHERE id = p_user_id;
-    SELECT * INTO v_rank_record FROM public.ranks WHERE name = v_user_record.current_rank;
+    SELECT * INTO v_rank_record FROM public.ranks WHERE LOWER(TRIM(name)) = LOWER(TRIM(v_user_record.current_rank));
 
     IF v_rank_record.id IS NULL THEN RETURN FALSE; END IF;
 
@@ -50,7 +50,7 @@ BEGIN
     -- Recorremos hacia arriba hasta 10 niveles (según el requerimiento del usuario)
     WHILE v_current_upline_id IS NOT NULL AND v_level <= 10 LOOP
         SELECT * INTO v_upline_record FROM public.profiles WHERE id = v_current_upline_id;
-        SELECT * INTO v_rank_record FROM public.ranks WHERE name = v_upline_record.current_rank;
+        SELECT * INTO v_rank_record FROM public.ranks WHERE LOWER(TRIM(name)) = LOWER(TRIM(v_upline_record.current_rank));
 
         -- 1. Verificar si el usuario califica para cobrar regalías este mes
         IF public.check_monthly_qualification(v_current_upline_id) THEN

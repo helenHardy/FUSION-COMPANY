@@ -23,6 +23,7 @@ ADD COLUMN IF NOT EXISTS pending_liquidation NUMERIC(10, 2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS pv NUMERIC(10, 2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS monthly_pv NUMERIC(10, 2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS pvg NUMERIC(10, 2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS monthly_pvg NUMERIC(10, 2) DEFAULT 0, -- Nuevo contador mensual
 ADD COLUMN IF NOT EXISTS total_earnings NUMERIC(10, 2) DEFAULT 0,
 ADD COLUMN IF NOT EXISTS active_directs_count INTEGER DEFAULT 0,
 ADD COLUMN IF NOT EXISTS free_products_count INTEGER DEFAULT 0;
@@ -138,6 +139,27 @@ BEGIN
         UPDATE public.profiles SET current_rank = v_next_rank.name WHERE id = p_user_id;
         PERFORM public.check_rank_promotion(p_user_id);
     END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- FUNCIÓN DE REPARTO DE PUNTOS (PVG) - ACTUALIZADA PARA MENSUAL
+CREATE OR REPLACE FUNCTION public.distribute_pvg(
+  p_start_user_id UUID,
+  p_points NUMERIC
+) RETURNS VOID AS $$
+DECLARE
+  v_current_sponsor UUID;
+BEGIN
+  SELECT sponsor_id INTO v_current_sponsor FROM public.profiles WHERE id = p_start_user_id;
+  WHILE v_current_sponsor IS NOT NULL LOOP
+    UPDATE public.profiles SET 
+        pvg = COALESCE(pvg, 0) + p_points,
+        monthly_pvg = COALESCE(monthly_pvg, 0) + p_points -- Nuevo contador mensual
+    WHERE id = v_current_sponsor;
+    
+    SELECT sponsor_id INTO v_current_sponsor FROM public.profiles WHERE id = v_current_sponsor;
+  END LOOP;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
