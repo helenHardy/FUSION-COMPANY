@@ -193,6 +193,7 @@ export default function UserList() {
                         <thead>
                             <tr>
                                 <th className={styles.th}>Afiliado</th>
+                                <th className={styles.th}>Combo</th>
                                 <th className={styles.th}>Contacto / CI</th>
                                 <th className={styles.th}>Rango</th>
                                 <th className={styles.th}>Patrocinador</th>
@@ -219,6 +220,11 @@ export default function UserList() {
                                                 <div className={styles.userName}>{user.full_name}</div>
                                                 <div className={styles.userRole}>{user.role}</div>
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td className={styles.td}>
+                                        <div className={styles.dataText}>
+                                            {user.combo?.name || '—'}
                                         </div>
                                     </td>
                                     <td className={styles.td}>

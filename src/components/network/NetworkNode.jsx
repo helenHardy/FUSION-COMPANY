@@ -17,7 +17,7 @@ export default function NetworkNode({ affiliate }) {
         try {
             const { data } = await supabase
                 .from('profiles')
-                .select('*, combos(name)')
+                .select('*, combo:current_combo_id(name)')
                 .eq('sponsor_id', affiliate.id)
             setChildren(data || [])
         } catch (err) {
@@ -59,7 +59,7 @@ export default function NetworkNode({ affiliate }) {
                             </div>
                         </div>
                         <div className={styles.comboBadge}>
-                            {affiliate.combos?.name || 'Sin Combo'}
+                            {affiliate.combo?.name || 'Sin Combo'}
                         </div>
                     </div>
 

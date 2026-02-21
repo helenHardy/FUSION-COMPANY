@@ -202,6 +202,18 @@ export default function Profile() {
                     </div>
                 </div>
 
+                <div className={`${styles.infoCard} glass`}>
+                    <div className={styles.iconContainer}>
+                        <Package size={20} />
+                    </div>
+                    <div>
+                        <span className={styles.fieldLabel}>Paquete de Activación</span>
+                        <div className={`${styles.fieldValue} ${styles.rankValue}`} style={{ color: '#10b981' }}>
+                            {profile.combo?.name || 'Sin Combo'}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Bank Information Card */}
                 <div className={`${styles.infoCard} ${styles.bankCard} glass`}>
                     <div className={styles.iconContainer} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>

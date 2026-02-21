@@ -29,7 +29,7 @@ export default function AdminNetworkTree() {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('*, combo:current_combo_id(name)')
                 .eq('id', userId)
                 .single()
 
