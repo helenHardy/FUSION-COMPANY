@@ -21,8 +21,8 @@ export default function OrderApproval() {
 
     const thermalCSS = `
         @page { size: 58mm auto; margin: 0; }
-        body { margin: 0; padding: 5mm; font-family: 'Courier New', Courier, monospace; background: white; color: black; }
-        .ticketContainer { width: 48mm; margin: 0 auto; }
+        body { margin: 0; padding: 2mm 2mm 2mm 4mm; width: 58mm; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; background: white; color: black; }
+        .ticketContainer { width: 100%; margin: 0; }
         .ticketHeader { text-align: center; margin-bottom: 5mm; border-bottom: 1px dashed #000; padding-bottom: 2mm; }
         .ticketTitle { font-size: 14pt; font-weight: bold; margin: 0; text-transform: uppercase; }
         .ticketSubtitle { font-size: 9pt; margin: 1mm 0; }

@@ -2,10 +2,11 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import { useAuth } from '../../../context/AuthContext'
-import { BarChart3, ShoppingBag, Users, Zap, Calendar, TrendingUp, Wallet, ArrowDownCircle, Info, Filter, Download, RefreshCw, Target, PieChart, Loader2, Eye, Star, Store } from 'lucide-react'
+import { BarChart3, ShoppingBag, Users, Zap, Calendar, TrendingUp, Wallet, ArrowDownCircle, Info, Filter, Download, RefreshCw, Target, PieChart, Loader2, Eye, Star, Store, Printer, FileText } from 'lucide-react'
 import { formatCurrency, formatDate } from '../../../lib/utils'
 import Table from '../../../components/ui/Table'
 import Modal from '../../../components/ui/Modal'
+import { Ticket } from '../../shop/Ticket'
 import styles from './GlobalSales.module.css'
 
 export default function GlobalSales() {
@@ -27,6 +28,46 @@ export default function GlobalSales() {
     const [selectedSale, setSelectedSale] = useState(null)
     const [saleDetails, setSaleDetails] = useState([])
     const [detailsLoading, setDetailsLoading] = useState(false)
+    const [printFormat, setPrintFormat] = useState('thermal')
+
+    const thermalCSS = `
+        @page { size: 58mm auto; margin: 0; }
+        body { margin: 0; padding: 2mm 2mm 2mm 4mm; width: 58mm; box-sizing: border-box; font-family: 'Courier New', Courier, monospace; background: white; color: black; }
+        .ticketContainer { width: 100%; margin: 0; }
+        .ticketHeader { text-align: center; margin-bottom: 5mm; border-bottom: 1px dashed #000; padding-bottom: 2mm; }
+        .ticketTitle { font-size: 14pt; font-weight: bold; margin: 0; text-transform: uppercase; }
+        .ticketSubtitle { font-size: 9pt; margin: 1mm 0; }
+        .ticketDivider { border-top: 1px dashed #000; margin: 2mm 0; }
+        .ticketMeta { font-size: 8pt; margin-bottom: 3mm; }
+        .ticketTable { width: 100%; border-collapse: collapse; font-size: 8pt; }
+        .ticketTable th { text-align: left; border-bottom: 1px solid #000; padding-bottom: 1mm; }
+        .ticketTable td { padding: 1mm 0; vertical-align: top; }
+        .ticketTotalSection { margin-top: 3mm; border-top: 1px double #000; padding-top: 2mm; }
+        .totalRow { display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt; }
+        .pvRow { display: flex; justify-content: space-between; font-size: 8pt; margin-top: 1mm; }
+        .ticketFooter { text-align: center; margin-top: 5mm; font-size: 7pt; font-style: italic; }
+    `;
+
+    const letterCSS = `
+        @page { size: letter; margin: 20mm; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: white; color: #1e293b; padding: 0; }
+        .letterContainer { max-width: 100%; margin: 0 auto; color: #334155; }
+        .letterHeader { display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .companyInfo h1 { margin: 0; color: #6366f1; font-size: 24pt; font-weight: 900; }
+        .notaVenta { text-align: right; }
+        .notaVenta h2 { margin: 0; font-size: 18pt; color: #1e293b; }
+        .letterContent { margin-bottom: 2rem; }
+        .clientInfo { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
+        .infoGroup label { display: block; font-size: 8pt; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .letterTable { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+        .letterTable th { background: #f1f5f9; padding: 12px; text-align: left; font-size: 9pt; font-weight: 800; border-bottom: 1px solid #e2e8f0; }
+        .letterTable td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 10pt; }
+        .letterTotals { margin-left: auto; width: 250px; background: #f8fafc; padding: 1rem; border-radius: 12px; }
+        .totalLine { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .totalMain { font-weight: 900; color: #6366f1; font-size: 14pt; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 8px; }
+        .signatureArea { margin-top: 4rem; display: flex; justify-content: center; }
+        .signBox { width: 250px; border-top: 1px solid #94a3b8; text-align: center; padding-top: 8px; font-size: 9pt; color: #64748b; }
+    `;
 
     const { profile } = useAuth()
     const isAdmin = profile?.role === 'admin'
@@ -168,6 +209,80 @@ export default function GlobalSales() {
         }
     }
 
+    const handlePrint = async (order) => {
+        try {
+            let items = []
+            if (selectedSale && selectedSale.id === order.id && saleDetails.length > 0) {
+                items = saleDetails
+            } else {
+                const { data, error } = await supabase
+                    .from('sale_items')
+                    .select('*, products(name)')
+                    .eq('sale_id', order.id)
+                if (error) throw error
+                items = data
+            }
+
+            const saleData = {
+                items: items.map(i => ({
+                    quantity: i.quantity,
+                    name: i.products?.name,
+                    price: i.price_at_sale,
+                    isGift: i.price_at_sale === 0
+                })),
+                total: order.total_amount,
+                totalPV: order.total_pv,
+                date: order.created_at,
+                customer: {
+                    full_name: order.profiles?.full_name,
+                    document_id: order.profiles?.document_id
+                }
+            }
+
+            // Create temporary iframe for printing
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+
+            const ticketElement = document.getElementById('printable-ticket-globalsales');
+            if (ticketElement) {
+                const css = printFormat === 'thermal' ? thermalCSS : letterCSS;
+                doc.open();
+                doc.write(`
+                    <html>
+                        <head>
+                            <title>Imprimir Comprobante</title>
+                            <style>${css}</style>
+                        </head>
+                        <body>
+                            ${ticketElement.innerHTML}
+                        </body>
+                    </html>
+                `);
+                doc.close();
+
+                iframe.contentWindow.focus();
+                setTimeout(() => {
+                    iframe.contentWindow.print();
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 500);
+            }
+
+        } catch (err) {
+            console.error("Error al imprimir:", err)
+            alert("Error al obtener detalles para impresión")
+        }
+    }
+
     const years = [2024, 2025, 2026]
     const months = Array.from({ length: 12 }, (_, i) => i + 1)
     const days = Array.from({ length: 31 }, (_, i) => i + 1)
@@ -299,9 +414,14 @@ export default function GlobalSales() {
                                         {isAdmin && <td>{sale.sucursales?.name}</td>}
                                         <td style={{ fontWeight: 700, color: '#10b981' }}>{formatCurrency(sale.total_amount)}</td>
                                         <td>
-                                            <button className={styles.iconBtn} onClick={() => handleViewDetails(sale)}>
-                                                <Eye size={16} />
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button className={styles.iconBtn} onClick={() => handleViewDetails(sale)} title="Ver Detalles">
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button className={styles.iconBtn} onClick={() => handlePrint(sale)} style={{ color: '#6366f1' }} title="Imprimir Comprobante">
+                                                    <Printer size={16} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -314,7 +434,6 @@ export default function GlobalSales() {
                 </div>
             </div>
 
-            {/* Details Modal */}
             <Modal isOpen={!!selectedSale} onClose={() => setSelectedSale(null)} title="Detalle de Venta">
                 {selectedSale && (
                     <div className={styles.detailsContent}>
@@ -322,6 +441,24 @@ export default function GlobalSales() {
                             <div><strong>ID Venta:</strong> #{selectedSale.id.slice(0, 8)}</div>
                             <div><strong>Total:</strong> {formatCurrency(selectedSale.total_amount)}</div>
                         </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: '8px' }}>
+                            <select
+                                value={printFormat}
+                                onChange={(e) => setPrintFormat(e.target.value)}
+                                style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: '14px' }}
+                            >
+                                <option value="thermal">Ticket Térmico (58mm)</option>
+                                <option value="letter">Hoja Carta Normal</option>
+                            </select>
+                            <button
+                                onClick={() => handlePrint(selectedSale)}
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#6366f1', color: 'white', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                            >
+                                <Printer size={16} /> Imprimir Comprobante
+                            </button>
+                        </div>
+
                         <div className={styles.detailItems}>
                             {detailsLoading ? <Loader2 className="spinner" /> : saleDetails.map((item, i) => (
                                 <div key={i} className={styles.detailItem}>
@@ -333,6 +470,32 @@ export default function GlobalSales() {
                     </div>
                 )}
             </Modal>
+
+            {/* Hidden Ticket for Printing */}
+            <div style={{ display: 'none' }}>
+                <div id="printable-ticket-globalsales">
+                    <Ticket
+                        saleData={selectedSale ? {
+                            items: saleDetails.map(i => ({
+                                quantity: i.quantity,
+                                name: i.products?.name,
+                                price: i.price_at_sale,
+                                isGift: i.price_at_sale === 0
+                            })),
+                            total: selectedSale.total_amount,
+                            totalPV: selectedSale.total_pv,
+                            date: selectedSale.created_at,
+                            customer: {
+                                full_name: selectedSale.profiles?.full_name,
+                                document_id: selectedSale.profiles?.document_id
+                            }
+                        } : null}
+                        branchName={selectedSale?.sucursales?.name || 'CENTRAL'}
+                        sellerName={selectedSale?.profiles?.full_name || 'VENDEDOR'}
+                        format={printFormat}
+                    />
+                </div>
+            </div>
         </div>
     )
 }

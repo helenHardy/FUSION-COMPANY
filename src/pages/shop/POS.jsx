@@ -21,6 +21,7 @@ export default function POS() {
     const [lastSale, setLastSale] = useState(null)
     const [showCart, setShowCart] = useState(false)
     const [printFormat, setPrintFormat] = useState('thermal')
+    const [tenderedAmount, setTenderedAmount] = useState('')
 
     useEffect(() => {
         fetchBranches()
@@ -168,6 +169,7 @@ export default function POS() {
 
     const totalAmount = cart.reduce((sum, item) => sum + (item.isGift ? 0 : item.price * item.quantity), 0)
     const totalPV = cart.reduce((sum, item) => sum + (item.isGift ? 0 : item.pv_points * item.quantity), 0)
+    const changeAmount = (parseFloat(tenderedAmount) || 0) - totalAmount
 
     const handleCheckout = async () => {
         const isManager = ['admin', 'sucursal', 'cajero'].includes(profile.role)
@@ -202,6 +204,7 @@ export default function POS() {
                 setLastSale({ items: [...cart], customer: selectedCustomer, total: totalAmount, totalPV: totalPV, date: new Date().toISOString(), branchName: branches.find(b => b.id === selectedBranch)?.name || 'Central', sellerName: profile.full_name || profile.email })
             }
             setCart([]); setSelectedCustomer(null); setCustomerSearch(''); setShowCart(false); fetchInventory()
+            setTenderedAmount('')
             setTimeout(() => setSuccess(null), 3000)
         } catch (err) { alert("Error: " + err.message) } finally { setLoading(false) }
     }
@@ -216,8 +219,8 @@ export default function POS() {
 
         const thermalCSS = `
             @page { size: 58mm auto; margin: 0; }
-            body { margin: 0; padding: 0; width: 58mm; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 8pt; line-height: 1.2; overflow-x: hidden; }
-            #printable-ticket { width: 58mm; padding: 2mm 1mm; box-sizing: border-box; }
+            body { margin: 0; padding: 2mm 2mm 2mm 4mm; width: 58mm; box-sizing: border-box; background: white; color: black; font-family: 'Courier New', Courier, monospace; font-size: 8pt; line-height: 1.2; overflow-x: hidden; }
+            #printable-ticket { width: 100%; padding: 0; box-sizing: border-box; }
             .ticketHeader { text-align: center; margin-bottom: 2mm; border-bottom: 0.5pt dashed black; padding-bottom: 1.5mm; }
             .ticketTitle { font-size: 10pt; font-weight: 950; line-height: 1.1; margin: 0; }
             .divider { text-align: center; margin: 1.5mm 0; font-weight: 900; letter-spacing: -1px; }
@@ -424,6 +427,30 @@ export default function POS() {
                             <span className={styles.totalLabel}>Total a Pagar</span>
                             <span className={styles.totalVal}>{formatCurrency(totalAmount)}</span>
                         </div>
+
+                        {['admin', 'sucursal', 'cajero'].includes(profile?.role) && totalAmount > 0 && (
+                            <div className={styles.calculatorSection}>
+                                <div className={styles.calcRow}>
+                                    <span className={styles.calcLabel}>Monto recibido BS:</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.1"
+                                        className={styles.calcInput}
+                                        placeholder="0.00"
+                                        value={tenderedAmount}
+                                        onChange={(e) => setTenderedAmount(e.target.value)}
+                                    />
+                                </div>
+                                {(parseFloat(tenderedAmount) || 0) > 0 && (
+                                    <div className={`${styles.changeRow} ${changeAmount >= 0 ? styles.changePositive : styles.changeNegative}`}>
+                                        <span className={styles.changeLabel}>{changeAmount >= 0 ? 'Cambio a devolver:' : 'Falta:'}</span>
+                                        <span className={styles.changeVal}>{formatCurrency(Math.abs(changeAmount))}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <button
                             className={styles.checkoutBtn}
                             disabled={loading || cart.length === 0 || (!selectedCustomer && !['admin', 'sucursal', 'cajero'].includes(profile?.role))}
