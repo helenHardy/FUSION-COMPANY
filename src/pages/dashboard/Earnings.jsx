@@ -64,7 +64,7 @@ export default function Earnings() {
                     <div className={styles.balanceLabel}>
                         <Wallet size={18} /> Balance Total Disponible
                     </div>
-                    <div className={styles.balanceAmount}>{formatCurrency(profile?.total_earnings || 0)}</div>
+                    <div className={styles.balanceAmount}>{formatCurrency(profile?.withdrawable_balance || 0)}</div>
                 </div>
 
                 <div className={styles.balanceStats}>

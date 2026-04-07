@@ -5,7 +5,7 @@ import {
     LayoutDashboard, Users, User, Store, Package, LogOut,
     BarChart, GitBranch, Boxes, Trophy, DollarSign, Wallet,
     BadgeDollarSign, Crown, ShoppingBag, Menu, X, Bell, Search,
-    Sun, Moon, CheckCircle, UserCheck
+    Sun, Moon, CheckCircle, UserCheck, ShieldCheck
 } from 'lucide-react'
 import { useState } from 'react'
 import { useTheme } from '../../context/ThemeContext'
@@ -49,6 +49,7 @@ export default function Layout() {
         { path: '/admin/rewards', label: 'Gestión Premios', icon: <Trophy size={20} /> },
         { path: '/admin/liquidations', label: 'Liquidaciones', icon: <BadgeDollarSign size={20} /> },
         { path: '/admin/payouts', label: 'Pagos/Billetera', icon: <Wallet size={20} /> },
+        { path: '/admin/audit', label: 'Auditoría', icon: <ShieldCheck size={20} /> },
     ]
 
     const NavItem = ({ item, onClick }) => {

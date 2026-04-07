@@ -27,6 +27,7 @@ import Royalties from './pages/dashboard/Royalties'
 import RoyaltiesConfig from './pages/admin/config/RoyaltiesConfig'
 import OrderApproval from './pages/admin/sales/OrderApproval'
 import RewardsManager from './pages/admin/finances/RewardsManager'
+import Audit from './pages/admin/users/Audit'
 
 const ProtectedRoute = ({ children }) => {
   const { user, profile, loading, signOut } = useAuth()
@@ -94,6 +95,7 @@ function App() {
             <Route path="admin/reports" element={<RoleGuard allowedRoles={['admin', 'sucursal', 'cajero']}><AdminSales /></RoleGuard>} />
             <Route path="admin/order-approval" element={<RoleGuard allowedRoles={['admin', 'sucursal', 'cajero']}><OrderApproval /></RoleGuard>} />
             <Route path="admin/rewards" element={<RoleGuard allowedRoles={['admin']}><RewardsManager /></RoleGuard>} />
+            <Route path="admin/audit" element={<RoleGuard allowedRoles={['admin']}><Audit /></RoleGuard>} />
           </Route>
         </Routes>
       </AuthProvider>
