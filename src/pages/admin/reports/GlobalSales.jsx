@@ -29,6 +29,7 @@ export default function GlobalSales() {
     const [saleDetails, setSaleDetails] = useState([])
     const [detailsLoading, setDetailsLoading] = useState(false)
     const [printFormat, setPrintFormat] = useState('thermal')
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
     const thermalCSS = `
         @page { size: 58mm auto; margin: 0; }
@@ -195,6 +196,7 @@ export default function GlobalSales() {
 
     const handleViewDetails = async (sale) => {
         setSelectedSale(sale)
+        setIsModalOpen(true)
         setDetailsLoading(true)
         try {
             const { data } = await supabase
@@ -223,37 +225,31 @@ export default function GlobalSales() {
                 items = data
             }
 
-            const saleData = {
-                items: items.map(i => ({
-                    quantity: i.quantity,
-                    name: i.products?.name,
-                    price: i.price_at_sale,
-                    isGift: i.price_at_sale === 0
-                })),
-                total: order.total_amount,
-                totalPV: order.total_pv,
-                date: order.created_at,
-                customer: {
-                    full_name: order.profiles?.full_name,
-                    document_id: order.profiles?.document_id
+            // Actualizar estados para que el Ticket oculto tenga la data
+            setSelectedSale(order)
+            setSaleDetails(items)
+
+            // Esperar un breve momento para que React renderice el Ticket oculto
+            setTimeout(() => {
+                const ticketElement = document.getElementById('printable-ticket-globalsales');
+                if (!ticketElement) {
+                    console.error("No se encontró el elemento ticketElement");
+                    return;
                 }
-            }
 
-            // Create temporary iframe for printing
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'fixed';
-            iframe.style.right = '0';
-            iframe.style.bottom = '0';
-            iframe.style.width = '0';
-            iframe.style.height = '0';
-            iframe.style.border = '0';
-            document.body.appendChild(iframe);
+                // Create temporary iframe for printing
+                const iframe = document.createElement('iframe');
+                iframe.style.position = 'fixed';
+                iframe.style.right = '0';
+                iframe.style.bottom = '0';
+                iframe.style.width = '0';
+                iframe.style.height = '0';
+                iframe.style.border = '0';
+                document.body.appendChild(iframe);
 
-            const doc = iframe.contentWindow.document;
-
-            const ticketElement = document.getElementById('printable-ticket-globalsales');
-            if (ticketElement) {
+                const doc = iframe.contentWindow.document;
                 const css = printFormat === 'thermal' ? thermalCSS : letterCSS;
+
                 doc.open();
                 doc.write(`
                     <html>
@@ -273,9 +269,10 @@ export default function GlobalSales() {
                     iframe.contentWindow.print();
                     setTimeout(() => {
                         document.body.removeChild(iframe);
+                        // No limpiamos selectedSale aquí para no romper el modal si estaba abierto
                     }, 1000);
                 }, 500);
-            }
+            }, 100);
 
         } catch (err) {
             console.error("Error al imprimir:", err)
@@ -434,7 +431,7 @@ export default function GlobalSales() {
                 </div>
             </div>
 
-            <Modal isOpen={!!selectedSale} onClose={() => setSelectedSale(null)} title="Detalle de Venta">
+            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedSale(null); }} title="Detalle de Venta">
                 {selectedSale && (
                     <div className={styles.detailsContent}>
                         <div className={styles.detailHeader}>
