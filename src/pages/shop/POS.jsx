@@ -72,6 +72,24 @@ export default function POS() {
         if (data?.length > 0) setSelectedBranch(data[0].id)
     }
 
+    const fetchInventory = async () => {
+        const { data } = await supabase
+            .from('inventory')
+            .select('stock, products(*)')
+            .eq('branch_id', selectedBranch)
+            .gt('stock', 0)
+
+        if (data) {
+            const formatted = data
+                .filter(item => item.products)
+                .map(item => ({
+                    ...item.products,
+                    stock: item.stock
+                }))
+            setProducts(formatted)
+        }
+    }
+
     const fetchShiftInfo = async () => {
         if (!selectedBranch) return
         try {
