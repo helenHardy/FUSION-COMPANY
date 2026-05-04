@@ -152,11 +152,16 @@ export default function GlobalSales() {
             if (fetchedSales) {
                 const totalRevenue = fetchedSales.reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0)
                 const totalPV = fetchedSales.reduce((sum, s) => sum + (Number(s.total_pv) || 0), 0)
+                
+                const t1Revenue = fetchedSales.filter(s => s.shift_number === 1).reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0)
+                const t2Revenue = fetchedSales.filter(s => s.shift_number === 2).reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0)
 
                 setStats({
                     revenue: totalRevenue,
                     orders: fetchedSales.length,
-                    pv: totalPV
+                    pv: totalPV,
+                    t1Revenue,
+                    t2Revenue
                 })
 
                 // 4. Process Product Breakdown
@@ -389,11 +394,23 @@ export default function GlobalSales() {
                 <div className={`${styles.card} glass`} style={{ flex: 2 }}>
                     <header className={styles.cardHeader}>
                         <h3 className={styles.cardTitle}><Calendar size={18} /> Historial de Ventas</h3>
+                        <div className={styles.shiftSummary}>
+                            <div className={styles.shiftMiniBox}>
+                                <span className={styles.shiftMiniLabel}>Turno 1</span>
+                                <span className={styles.shiftMiniValue}>{formatCurrency(stats?.t1Revenue || 0)}</span>
+                            </div>
+                            <div className={styles.shiftMiniBox}>
+                                <span className={styles.shiftMiniLabel}>Turno 2</span>
+                                <span className={styles.shiftMiniValue}>{formatCurrency(stats?.t2Revenue || 0)}</span>
+                            </div>
+                        </div>
                     </header>
                     <div className={styles.tableContainer}>
                         <table className={styles.historyTable}>
                             <thead>
                                 <tr>
+                                    <th>Ticket</th>
+                                    <th>Turno</th>
                                     <th>Fecha</th>
                                     <th>Vendedor</th>
                                     {isAdmin && <th>Sucursal</th>}
@@ -406,6 +423,8 @@ export default function GlobalSales() {
                                     <tr><td colSpan="5" className="text-center p-4"><Loader2 className="spinner" /></td></tr>
                                 ) : sales.map(sale => (
                                     <tr key={sale.id}>
+                                        <td style={{ fontWeight: 600, color: '#6366f1' }}>{sale.ticket_number ? sale.ticket_number.toString().padStart(4, '0') : '---'}</td>
+                                        <td><span className={sale.shift_number === 1 ? styles.t1Badge : styles.t2Badge}>T{sale.shift_number || 1}</span></td>
                                         <td>{formatDate(sale.created_at)}</td>
                                         <td>{sale.profiles?.full_name || 'Desconocido'}</td>
                                         {isAdmin && <td>{sale.sucursales?.name}</td>}
@@ -485,7 +504,8 @@ export default function GlobalSales() {
                             customer: {
                                 full_name: selectedSale.profiles?.full_name,
                                 document_id: selectedSale.profiles?.document_id
-                            }
+                            },
+                            ticket_number: selectedSale.ticket_number
                         } : null}
                         branchName={selectedSale?.sucursales?.name || 'CENTRAL'}
                         sellerName={selectedSale?.profiles?.full_name || 'VENDEDOR'}

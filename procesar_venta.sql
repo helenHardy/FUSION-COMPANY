@@ -18,9 +18,9 @@ DECLARE
 BEGIN
   -- 1. Crear el registro de la venta principal
   INSERT INTO public.sales (
-    user_id, branch_id, total_amount, total_pv, status, created_at
+    user_id, branch_id, total_amount, total_pv, status, created_at, shift_number, seller_id
   ) VALUES (
-    p_user_id, p_branch_id, 0, 0, 'completado', NOW()
+    p_user_id, p_branch_id, 0, 0, 'completado', NOW(), public.get_active_shift(p_branch_id), p_seller_id
   ) RETURNING id INTO v_sale_id;
 
   -- 2. Procesar cada item del JSON

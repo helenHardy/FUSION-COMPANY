@@ -22,6 +22,8 @@ export default function POS() {
     const [showCart, setShowCart] = useState(false)
     const [printFormat, setPrintFormat] = useState('thermal')
     const [tenderedAmount, setTenderedAmount] = useState('')
+    const [currentShift, setCurrentShift] = useState(1)
+    const [shiftTotal, setShiftTotal] = useState(0)
 
     useEffect(() => {
         fetchBranches()
@@ -30,6 +32,7 @@ export default function POS() {
     useEffect(() => {
         if (selectedBranch) {
             fetchInventory()
+            fetchShiftInfo()
         }
     }, [selectedBranch])
 
@@ -69,21 +72,46 @@ export default function POS() {
         if (data?.length > 0) setSelectedBranch(data[0].id)
     }
 
-    const fetchInventory = async () => {
-        const { data } = await supabase
-            .from('inventory')
-            .select('stock, products(*)')
-            .eq('branch_id', selectedBranch)
-            .gt('stock', 0)
+    const fetchShiftInfo = async () => {
+        if (!selectedBranch) return
+        try {
+            const { data: shift, error } = await supabase.rpc('get_active_shift', { p_branch_id: selectedBranch })
+            if (error) throw error
+            setCurrentShift(shift || 1)
 
-        if (data) {
-            const formatted = data
-                .filter(item => item.products)
-                .map(item => ({
-                    ...item.products,
-                    stock: item.stock
-                }))
-            setProducts(formatted)
+            const today = new Date().toISOString().split('T')[0]
+            const { data: sales } = await supabase
+                .from('sales')
+                .select('total_amount')
+                .eq('branch_id', selectedBranch)
+                .eq('shift_number', shift || 1)
+                .gte('created_at', today)
+
+            const total = sales?.reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0) || 0
+            setShiftTotal(total)
+        } catch (err) {
+            console.error("Error fetching shift info:", err)
+        }
+    }
+
+    const handleCloseShift = async () => {
+        if (!window.confirm(`¿Estás seguro de cerrar el Turno ${currentShift}? Se mostrará el total vendido para la entrega.`)) return
+        
+        try {
+            setLoading(true)
+            const { data: nextShift, error } = await supabase.rpc('close_current_shift', { p_branch_id: selectedBranch })
+            if (error) throw error
+
+            const message = currentShift === 1 
+                ? `Turno 1 Cerrado. Total a entregar: ${formatCurrency(shiftTotal)}. Ahora el sistema pasará al Turno 2.`
+                : `Día Finalizado. Total Turno 2: ${formatCurrency(shiftTotal)}. ¡Buen trabajo!`
+            
+            alert(message)
+            fetchShiftInfo()
+        } catch (err) {
+            alert("Error al cerrar turno: " + err.message)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -196,14 +224,34 @@ export default function POS() {
                 params.p_total_pv = totalPV
             }
 
-            const { error } = await supabase.rpc(rpcName, params)
+            const { data: saleId, error } = await supabase.rpc(rpcName, params)
             if (error) throw error
+
+            // Si es una venta directa, recuperamos el número de ticket generado para el comprobante
+            let finalTicketNumber = null
+            if (isManager && saleId) {
+                const { data: saleRecord } = await supabase
+                    .from('sales')
+                    .select('ticket_number')
+                    .eq('id', saleId)
+                    .single()
+                finalTicketNumber = saleRecord?.ticket_number
+            }
 
             setSuccess(isManager ? "¡Venta realizada con éxito!" : "¡Pedido solicitado con éxito!")
             if (isManager) {
-                setLastSale({ items: [...cart], customer: selectedCustomer, total: totalAmount, totalPV: totalPV, date: new Date().toISOString(), branchName: branches.find(b => b.id === selectedBranch)?.name || 'Central', sellerName: profile.full_name || profile.email })
+                setLastSale({ 
+                    items: [...cart], 
+                    customer: selectedCustomer, 
+                    total: totalAmount, 
+                    totalPV: totalPV, 
+                    date: new Date().toISOString(), 
+                    branchName: branches.find(b => b.id === selectedBranch)?.name || 'Central', 
+                    sellerName: profile.full_name || profile.email,
+                    ticket_number: finalTicketNumber
+                })
             }
-            setCart([]); setSelectedCustomer(null); setCustomerSearch(''); setShowCart(false); fetchInventory()
+            setCart([]); setSelectedCustomer(null); setCustomerSearch(''); setShowCart(false); fetchInventory(); fetchShiftInfo()
             setTenderedAmount('')
             setTimeout(() => setSuccess(null), 3000)
         } catch (err) { alert("Error: " + err.message) } finally { setLoading(false) }
@@ -342,6 +390,17 @@ export default function POS() {
                     <div className={styles.cartHeader}>
                         <div className={styles.cartTitleBox}><ShoppingCart size={24} /><h3 className={styles.cartTitle}>Venta Actual</h3></div>
                         <button className={styles.closeCart} onClick={() => setShowCart(false)}><X size={24} /></button>
+                    </div>
+
+                    <div className={styles.shiftInfoPanel}>
+                        <div className={styles.shiftBadge}>TURNO {currentShift}</div>
+                        <div className={styles.shiftAmount}>
+                            <span className={styles.shiftLabel}>Vendido en este turno:</span>
+                            <span className={styles.shiftValue}>{formatCurrency(shiftTotal)}</span>
+                        </div>
+                        <button className={styles.closeShiftBtn} onClick={handleCloseShift}>
+                            {currentShift === 1 ? 'Entregar Turno 1' : 'Finalizar Día (T2)'}
+                        </button>
                     </div>
 
                     <div className={styles.customerSection}>

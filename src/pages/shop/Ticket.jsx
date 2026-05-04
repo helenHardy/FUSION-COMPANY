@@ -18,7 +18,7 @@ export const Ticket = ({ saleData, branchName, sellerName, format = 'thermal' })
                     </div>
                     <div className="saleInfo">
                         <div className="notaTitulo">NOTA DE VENTA</div>
-                        <p><strong>NRO:</strong> {String(new Date(date).getTime()).slice(-6)}</p>
+                        <p><strong>NRO:</strong> {saleData.ticket_number ? saleData.ticket_number.toString().padStart(4, '0') : String(new Date(date).getTime()).slice(-6)}</p>
                         <p><strong>FECHA:</strong> {new Date(date).toLocaleDateString()}</p>
                     </div>
                 </div>
@@ -93,7 +93,7 @@ export const Ticket = ({ saleData, branchName, sellerName, format = 'thermal' })
                     <span>HORA: {new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <div className="metaRow">
-                    <span>NRO OP: {String(new Date(date).getTime()).slice(-6)}</span>
+                    <span>NRO OP: {saleData.ticket_number ? saleData.ticket_number.toString().padStart(4, '0') : String(new Date(date).getTime()).slice(-6)}</span>
                 </div>
                 <div className="metaRow">
                     <span>SUCURSAL: {String(branchName || 'CENTRAL').toUpperCase()}</span>

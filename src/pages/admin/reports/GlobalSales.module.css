@@ -353,3 +353,55 @@
         width: 100%;
     }
 }
+
+/* Shift Summary Styles */
+.shiftSummary {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.shiftMiniBox {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+}
+
+.shiftMiniLabel {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.shiftMiniValue {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--primary-light);
+}
+
+.t1Badge, .t2Badge {
+    font-size: 0.7rem;
+    font-weight: 900;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.t1Badge {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.t2Badge {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}

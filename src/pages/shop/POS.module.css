@@ -843,3 +843,67 @@
     font-weight: 950;
     letter-spacing: -0.02em;
 }
+
+/* Shift Management Panel */
+.shiftInfoPanel {
+    margin: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.shiftBadge {
+    align-self: flex-start;
+    font-size: 0.65rem;
+    font-weight: 900;
+    background: var(--pos-primary);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 0 10px var(--pos-primary-glow);
+}
+
+.shiftAmount {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.shiftLabel {
+    font-size: 0.7rem;
+    color: var(--pos-text-dim);
+    font-weight: 600;
+}
+
+.shiftValue {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--pos-success);
+}
+
+.closeShiftBtn {
+    width: 100%;
+    padding: 0.6rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.closeShiftBtn:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
