@@ -23,9 +23,10 @@ CREATE OR REPLACE FUNCTION public.get_active_shift(p_branch_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
     v_shift INTEGER;
+    v_today DATE := (CURRENT_TIMESTAMP AT TIME ZONE 'America/La_Paz')::DATE;
 BEGIN
     INSERT INTO public.shift_control (branch_id, control_date, active_shift)
-    VALUES (p_branch_id, CURRENT_DATE, 1)
+    VALUES (p_branch_id, v_today, 1)
     ON CONFLICT (branch_id, control_date) 
     DO UPDATE SET branch_id = EXCLUDED.branch_id -- No hace nada, solo para obtener el retorno
     RETURNING active_shift INTO v_shift;
@@ -39,14 +40,15 @@ CREATE OR REPLACE FUNCTION public.close_current_shift(p_branch_id UUID)
 RETURNS INTEGER AS $$
 DECLARE
     v_current INTEGER;
+    v_today DATE := (CURRENT_TIMESTAMP AT TIME ZONE 'America/La_Paz')::DATE;
 BEGIN
     SELECT active_shift INTO v_current FROM public.shift_control 
-    WHERE branch_id = p_branch_id AND control_date = CURRENT_DATE;
+    WHERE branch_id = p_branch_id AND control_date = v_today;
     
     IF v_current IS NULL THEN
         -- Si no existe, lo creamos y cerramos el 1
         INSERT INTO public.shift_control (branch_id, control_date, active_shift, is_t1_closed)
-        VALUES (p_branch_id, CURRENT_DATE, 2, TRUE)
+        VALUES (p_branch_id, v_today, 2, TRUE)
         RETURNING active_shift INTO v_current;
         RETURN 2;
     END IF;
@@ -54,12 +56,12 @@ BEGIN
     IF v_current = 1 THEN
         UPDATE public.shift_control 
         SET active_shift = 2, is_t1_closed = TRUE 
-        WHERE branch_id = p_branch_id AND control_date = CURRENT_DATE;
+        WHERE branch_id = p_branch_id AND control_date = v_today;
         RETURN 2;
     ELSE
         UPDATE public.shift_control 
         SET is_t2_closed = TRUE 
-        WHERE branch_id = p_branch_id AND control_date = CURRENT_DATE;
+        WHERE branch_id = p_branch_id AND control_date = v_today;
         RETURN 0; -- 0 significa que el día terminó
     END IF;
 END;

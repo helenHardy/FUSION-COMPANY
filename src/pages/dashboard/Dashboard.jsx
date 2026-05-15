@@ -43,8 +43,14 @@ export default function Dashboard() {
 
             if (!branch) return
 
-            const today = new Date().toISOString().split('T')[0]
-            const firstDayMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+            const startOfDay = new Date()
+            startOfDay.setHours(0, 0, 0, 0)
+            const today = startOfDay.toISOString()
+            
+            const startOfMonth = new Date()
+            startOfMonth.setDate(1)
+            startOfMonth.setHours(0, 0, 0, 0)
+            const firstDayMonth = startOfMonth.toISOString()
 
             const [todaySales, monthSales, pending] = await Promise.all([
                 supabase.from('sales').select('total_amount').eq('branch_id', branch.id).eq('status', 'completado').gte('created_at', today),

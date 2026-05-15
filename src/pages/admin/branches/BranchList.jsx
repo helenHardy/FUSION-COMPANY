@@ -26,8 +26,8 @@ export default function BranchList() {
 
     // Filter State
     const [filterType, setFilterType] = useState('month') // 'day', 'month', 'year'
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0])
-    const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7))
+    const [filterDate, setFilterDate] = useState(new Date().toLocaleDateString('en-CA'))
+    const [filterMonth, setFilterMonth] = useState(new Date().toLocaleDateString('en-CA').slice(0, 7))
     const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString())
 
     useEffect(() => {

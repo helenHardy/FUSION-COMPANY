@@ -97,13 +97,14 @@ export default function POS() {
             if (error) throw error
             setCurrentShift(shift || 1)
 
-            const today = new Date().toISOString().split('T')[0]
+            const startOfDay = new Date()
+            startOfDay.setHours(0, 0, 0, 0)
             const { data: sales } = await supabase
                 .from('sales')
                 .select('total_amount')
                 .eq('branch_id', selectedBranch)
                 .eq('shift_number', shift || 1)
-                .gte('created_at', today)
+                .gte('created_at', startOfDay.toISOString())
 
             const total = sales?.reduce((sum, s) => sum + (Number(s.total_amount) || 0), 0) || 0
             setShiftTotal(total)
